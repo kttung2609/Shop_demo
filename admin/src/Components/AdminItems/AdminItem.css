@@ -1,0 +1,179 @@
+:root {
+  --primary-color: #ff4d4f; /* Màu chủ đạo của bạn */
+  --text-dark: #1a1a1a;
+  --text-light: #777;
+  --border-color: #eee;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.admin-item-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.admin-item-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+/* IMAGE AREA */
+.admin-item-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #fff;
+  overflow: hidden;
+}
+
+.admin-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Để ảnh vợt/giày không bị cắt mất */
+  padding: 10px;
+  transition: transform 0.5s ease;
+}
+
+.admin-item-card:hover .admin-item-image img {
+  transform: scale(1.1);
+}
+
+.admin-discount-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--primary-color);
+  color: white;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.admin-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.admin-image-overlay span {
+  background: white;
+  color: var(--text-dark);
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-item-card:hover .admin-image-overlay {
+  opacity: 1;
+}
+
+/* CONTENT AREA */
+.admin-item-content {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-item-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  line-height: 1.4;
+  height: 42px; /* Giới hạn 2 dòng */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-item-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.admin-item-status strong {
+  color: var(--primary-color);
+}
+
+.admin-item-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.admin-new-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+.admin-old-price {
+  font-size: 13px;
+  text-decoration: line-through;
+  color: #bbb;
+}
+
+/* BUTTONS AREA */
+.admin-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto; /* Đẩy cụm nút xuống cuối card */
+}
+
+.admin-item-actions button {
+  flex: 1;
+  height: 38px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.admin-btn-edit {
+  background: #f0f0f0;
+  color: var(--text-dark);
+}
+
+.admin-btn-edit:hover {
+  background: var(--text-dark);
+  color: #fff;
+}
+
+.admin-btn-delete {
+  background: #fff5f5;
+  color: var(--primary-color);
+  border: 1px solid #ffebeb !important;
+}
+
+.admin-btn-delete:hover {
+  background: var(--primary-color);
+  color: white;
+}

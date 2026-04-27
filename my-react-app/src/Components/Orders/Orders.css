@@ -1,0 +1,231 @@
+:root {
+  --primary-color: #ff4d4f; /* Màu chủ đạo của bạn */
+  --bg-color: #f5f5f5;
+  --text-dark: #222;
+  --border-color: #eee;
+}
+
+.orders-page {
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  padding: 30px 0;
+}
+
+.container-custom {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* Breadcrumb */
+.orders-breadcrumb {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 20px;
+}
+.orders-breadcrumb .active { color: var(--text-dark); font-weight: 600; }
+
+.page-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+/* Tabs Navigation */
+.orders-tabs-nav {
+  display: flex;
+  background: white;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 15px 0;
+  border: none;
+  background: none;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: 0.3s;
+}
+
+.tab-item:hover { color: var(--primary-color); }
+
+.tab-item.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+/* Order Card */
+.order-main-card {
+  background: white;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 10px rgba(0,0,0,0.05);
+}
+
+/* Card Header */
+.card-header {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.order-code { font-weight: 700; color: var(--text-dark); }
+.order-date { color: #888; }
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.header-status.pending { color: #f39c12; }
+.header-status.shipping { color: #3498db; }
+.header-status.delivered { color: #2ecc71; }
+.header-status.cancelled { color: #e74c3c; }
+
+/* Card Body */
+.card-body { padding: 0 20px; }
+
+.product-row {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.product-row:last-child { border-bottom: none; }
+
+.prod-img img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.prod-info {
+  flex: 1;
+  padding-left: 15px;
+}
+
+.prod-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.prod-qty {
+  font-size: 13px;
+  color: #777;
+}
+
+.prod-price {
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* Card Footer */
+.card-footer {
+  padding: 20px;
+  background: #fffcfc;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.total-payment {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.total-label { font-size: 14px; color: #555; }
+.total-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+.footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-actions button {
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: white;
+  transition: 0.3s;
+}
+
+.btn-cancel {
+  border-color: #ddd !important;
+  color: #777;
+}
+
+.btn-cancel:hover { background: #fdfdfd; color: var(--primary-color); }
+
+.btn-view-detail:hover { background: var(--bg-color); }
+
+.btn-rebuy {
+  background: var(--primary-color) !important;
+  color: white !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* Empty State */
+.orders-empty-state {
+  background: white;
+  padding: 80px 0;
+  text-align: center;
+  color: #ccc;
+}
+
+.orders-empty-state p {
+  margin: 20px 0;
+  color: #666;
+  font-size: 16px;
+}
+
+.orders-empty-state button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .orders-tabs-nav { overflow-x: auto; }
+  .tab-item { min-width: 120px; font-size: 12px; }
+  .card-footer { align-items: center; }
+  .footer-actions { width: 100%; }
+  .footer-actions button { flex: 1; padding: 10px 5px; font-size: 11px; }
+}

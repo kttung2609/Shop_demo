@@ -1,0 +1,120 @@
+.item-card {
+  display: block;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: #222;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  position: relative;
+}
+
+.item-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+/* IMAGE */
+.item-image {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  background: #f7f7f7;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.4s;
+}
+
+.item-card:hover img {
+  transform: scale(1.1);
+}
+
+/* BADGE */
+.badge {
+  position: absolute;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 20px;
+  color: #fff;
+}
+
+.badge.sale {
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(45deg, #ff4141, #ff7b7b);
+}
+
+.badge.out {
+  top: 10px;
+  right: 10px;
+  background: #000;
+}
+
+/* HOVER */
+.overlay {
+  position: absolute;
+  bottom: -50px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.item-card:hover .overlay {
+  bottom: 20px;
+}
+
+.overlay button {
+  background: #ff4141;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* CONTENT */
+.item-content {
+  padding: 15px;
+}
+
+.item-title {
+  font-size: 15px;
+  font-weight: 600;
+  height: 42px;
+  overflow: hidden;
+}
+
+/* PRICE */
+.price-box {
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.new {
+  color: #ff4141;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.old {
+  text-decoration: line-through;
+  color: #aaa;
+  font-size: 13px;
+}
+
+/* STOCK */
+.stock {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+}

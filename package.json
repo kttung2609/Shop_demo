@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  },
+  "dependencies": {
+    "lucide-react": "^1.8.0",
+    "react-router-dom": "^7.13.1"
+  }
+}

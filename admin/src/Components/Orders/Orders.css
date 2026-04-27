@@ -1,0 +1,216 @@
+:root {
+  --primary-color: #ff4d4f; /* Màu chủ đạo của bạn */
+  --bg-admin: #f4f7f6;
+  --text-dark: #2d3436;
+  --border-color: #dfe6e9;
+}
+
+.admin-orders-page {
+  background-color: var(--bg-admin);
+  min-height: 100vh;
+  padding: 30px;
+  width: 100%;
+}
+
+.orders-container-full {
+  max-width: 98%; /* Kéo dài ra gần hết trang */
+  margin: 0 auto;
+}
+
+/* Header */
+.admin-orders-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 25px;
+}
+
+.title-box h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.title-box p {
+  color: #636e72;
+  font-size: 14px;
+}
+
+.orders-stats span {
+  background: white;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Tabs */
+.admin-orders-tabs {
+  display: flex;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  gap: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.admin-orders-tabs button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: 700;
+  color: #636e72;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: 0.3s;
+}
+
+.admin-orders-tabs button:hover {
+  background: #f8f9fa;
+  color: var(--primary-color);
+}
+
+.admin-orders-tabs button.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Table */
+.orders-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.modern-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modern-admin-table th {
+  background: #fdfdfd;
+  padding: 18px 20px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 800;
+  color: #b2bec3;
+  text-transform: uppercase;
+  border-bottom: 2px solid #f1f1f1;
+}
+
+.modern-admin-table td {
+  padding: 20px;
+  border-bottom: 1px solid #f8f9fa;
+  font-size: 14px;
+  color: var(--text-dark);
+  vertical-align: middle;
+}
+
+.modern-admin-table tr:hover {
+  background: #fcfcfc;
+}
+
+/* Columns */
+.col-id {
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-info span {
+  font-size: 12px;
+  color: #888;
+}
+
+.products-list-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mini-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #636e72;
+}
+
+.mini-item span {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.col-total {
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+/* Badges */
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.status-badge.pending { background: #fff3e0; color: #ef6c00; }
+.status-badge.shipping { background: #e3f2fd; color: #1976d2; }
+.status-badge.completed { background: #e8f5e9; color: #2e7d32; }
+.status-badge.cancelled { background: #ffebee; color: var(--primary-color); }
+
+/* Buttons */
+.action-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: 0.2s;
+}
+
+.btn-action.confirm { background: #fff4e5; color: #ffa000; border: 1px solid #ffe0b2; }
+.btn-action.confirm:hover { background: #ffa000; color: white; }
+
+.btn-action.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.btn-action.success:hover { background: #2e7d32; color: white; }
+
+.btn-action.cancel { background: #fff1f0; color: var(--primary-color); border: 1px solid #ffa39e; }
+.btn-action.cancel:hover { background: var(--primary-color); color: white; }
+
+.cancel-note {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.empty-table {
+  text-align: center;
+  padding: 50px !important;
+  color: #999;
+}
