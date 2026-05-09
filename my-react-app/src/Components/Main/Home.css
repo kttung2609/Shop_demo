@@ -9,9 +9,33 @@
 .home-container {
   background-color: #fff;
   font-family: 'Inter', sans-serif;
+  width: 100%;
+  overflow-x: hidden;
 }
 
-/* Hero Banner */
+
+.home-section {
+  padding: 60px 4%; 
+  max-width: 1600px; 
+  margin: 0 auto;    
+}
+
+
+.home-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 30px; 
+  width: 100%;
+}
+.home-products-grid > div {
+  width: 100%;
+  transition: transform 0.3s ease;
+}
+.home-products-grid > div:hover {
+  transform: translateY(-10px); /* Tạo hiệu ứng nổi bật khi di chuột vào */
+}
+
+
 .hero-banner {
   height: 550px;
   background: url('https://images.unsplash.com/photo-1626225967045-9c730a0a9011?q=80&w=2070') center/cover no-repeat;
@@ -63,13 +87,14 @@
   box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
 }
 
-/* Service Policy */
 .service-policy {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding: 40px 8%;
+  padding: 40px 4%; /* Giảm từ 8% xuống 4% */
   background: var(--bg-light);
   gap: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 .policy-item {
@@ -156,12 +181,6 @@
   gap: 5px;
 }
 
-/* Products Grid */
-.home-products-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 25px;
-}
 
 .mid-banner {
   width: 84%;
@@ -248,26 +267,22 @@
   transform: scale(1.01);
 }
 
-.mid-banner-ads img {
-  width: 100%;
-  display: block;
+.mid-banner-ads {
+  width: 92%; /* Tăng từ 84% lên 92% */
+  margin: 50px auto;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .slider-item { height: 300px; }
-  .slider-content h2 { font-size: 1.8rem; }
-  .slider-content p { font-size: 0.9rem; }
-}
-/* Responsive */
+
+
+
 @media (max-width: 1024px) {
-  .home-products-grid { grid-template-columns: repeat(2, 1fr); }
+  .brand-list { display: none; }
+  .home-products-grid {
+    grid-template-columns: repeat(5, 1fr); /* Màn hình quá lớn thì hiện 5 sp */
+  }
   .service-policy { grid-template-columns: repeat(2, 1fr); }
   .hero-title { font-size: 2.5rem; }
-}
-
-@media (max-width: 600px) {
-  .brand-list { display: none; } /* Ẩn brand chips trên mobile để đỡ rối */
-  .home-products-grid { grid-template-columns: 1fr; }
-  .service-policy { grid-template-columns: 1fr; }
 }

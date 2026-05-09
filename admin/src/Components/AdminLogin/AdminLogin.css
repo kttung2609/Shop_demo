@@ -1,0 +1,213 @@
+:root {
+  --primary-color: #ff4d4f;
+  --primary-hover: #e04345;
+  --text-dark: #2d3436;
+  --text-gray: #636e72;
+}
+
+.admin-login-page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url('https://images.unsplash.com/photo-1626225967045-9c730a0a9011?q=80&w=2070') center/cover no-repeat;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+.admin-login-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(45,52,54,0.4) 100%);
+  z-index: 1;
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 450px;
+  background: white;
+  padding: 50px 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.logo-icon-bg {
+  width: 80px;
+  height: 80px;
+  background: var(--primary-color);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 10px 20px rgba(255, 77, 79, 0.3);
+}
+
+.login-header h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.login-header p {
+  color: var(--text-gray);
+  font-size: 14px;
+}
+
+/* ERROR BOX */
+.login-error-box {
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  padding: 12px 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f5222d;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+/* FORM STYLING */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.field-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #b2bec3;
+  transition: 0.3s;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 14px 15px 14px 45px;
+  border: 2px solid #f1f2f6;
+  background: #f8f9fa;
+  border-radius: 10px;
+  outline: none;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.input-wrapper input:focus {
+  border-color: var(--primary-color);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 77, 79, 0.1);
+}
+
+.input-wrapper input:focus + .field-icon {
+  color: var(--primary-color);
+}
+
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 30px;
+}
+
+.remember-me {
+  color: var(--text-gray);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.forgot-pw {
+  color: var(--primary-color);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* BUTTON */
+.btn-login-admin {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 15px rgba(255, 77, 79, 0.3);
+}
+
+.btn-login-admin:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 77, 79, 0.4);
+}
+
+.btn-login-admin:active {
+  transform: translateY(0);
+}
+
+.btn-login-admin:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 30px;
+  color: #b2bec3;
+  font-size: 12px;
+}
+
+/* Loading Spinner */
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #fff;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 480px) {
+  .admin-login-card {
+    padding: 40px 20px;
+    margin: 15px;
+  }
+}

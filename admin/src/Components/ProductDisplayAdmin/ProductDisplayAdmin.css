@@ -258,3 +258,52 @@
 .admin-specs-table { width: 100%; border-collapse: collapse; }
 .admin-specs-table td { padding: 10px; border-bottom: 1px solid #f0f0f0; }
 .admin-specs-table td:first-child { font-weight: 700; width: 30%; color: #888; }
+.success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #2ecc71;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(46, 204, 113, 0.3);
+  z-index: 9999;
+  transform: translateX(200%); /* Ẩn đi */
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  font-weight: 600;
+}
+
+.success-toast.show {
+  transform: translateX(0); /* Hiện ra */
+}
+
+/* ----- LOADING SPINNER ----- */
+.spinner {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.btn-loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.admin-btn-cart {
+    transition: all 0.3s ease;
+}
+
+.admin-btn-cart:hover:not(:disabled) {
+    background: #e04345;
+    transform: scale(1.02);
+}
+
+.admin-btn-cart:active {
+    transform: scale(0.98);
+}
