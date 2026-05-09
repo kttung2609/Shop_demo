@@ -29,17 +29,28 @@ const Checkout = () => {
   };
 
   const handleOrder = async () => {
-    // Giữ nguyên logic xử lý của bạn
     const user = JSON.parse(localStorage.getItem("user"));
-    const items = cartItems.map(item => ({
-      product_id: item.productID,
-      name: item.name,
-      image: item.image,
-      price: item.new_price,
-      quantity: item.quantity,
-    }));
+    
+    // Đồng bộ cách lấy ảnh khi gửi lên server để lưu vào bảng order_items
+    const items = cartItems.map(item => {
+      let imageSrc = "default.jpg";
+      try {
+        const parsedImgs = typeof item.images === 'string' ? JSON.parse(item.images) : item.images;
+        if (parsedImgs && parsedImgs.length > 0) imageSrc = parsedImgs[0];
+      } catch (e) {
+        imageSrc = item.image || "default.jpg";
+      }
 
-    try {
+      return {
+        product_id: item.productID,
+        name: item.name,
+        image: imageSrc, // Gửi ảnh đã xử lý
+        price: item.new_price,
+        quantity: item.quantity,
+      };
+    });
+
+      try {
       const res = await fetch("http://localhost:4000/orders/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,27 +62,35 @@ const Checkout = () => {
           email: form.email,
           address: form.address,
           note: form.note,
-          payment_method: paymentMethod // Gửi thêm phương thức thanh toán
+          payment_method: paymentMethod
         })
       });
 
       const data = await res.json();
+
       if (data.success) {
+        // 🔥 BƯỚC QUAN TRỌNG: Gọi API xóa sạch giỏ hàng trong Database
+        await fetch("http://localhost:4000/api/cart/clear", {
+          method: "DELETE",
+          credentials: "include" // Để server biết xóa giỏ hàng của ai dựa trên Token
+        });
+
         alert("✅ Đặt hàng thành công!");
-        localStorage.removeItem("cart");
-        window.location.href = "/orders";
+        
+        // Chuyển hướng người dùng về trang đơn hàng
+        // Sử dụng window.location.href sẽ làm mới toàn bộ App và đưa giỏ hàng về 0
+        window.location.href = "/orders"; 
       } else {
         alert(data.message || "❌ Đặt hàng thất bại!");
       }
     } catch (err) {
-      alert("Lỗi server!");
+      alert("Lỗi kết nối server!");
     }
   };
 
   return (
     <div className="checkout-page">
       <div className="container-custom">
-        {/* BREADCRUMB / PROGRESS */}
         <div className="checkout-breadcrumb">
           <span>Giỏ hàng</span> <ChevronRight size={14} />
           <span className="active">Thanh toán</span> <ChevronRight size={14} />
@@ -79,7 +98,6 @@ const Checkout = () => {
         </div>
 
         <div className="checkout-layout">
-          {/* LEFT: SHIPPING INFO */}
           <div className="checkout-left">
             <div className="checkout-section">
               <h2 className="section-title">
@@ -152,24 +170,33 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* RIGHT: ORDER SUMMARY */}
           <aside className="checkout-right">
             <div className="order-summary-card">
               <h3 className="summary-title">ĐƠN HÀNG CỦA BẠN</h3>
               
               <div className="checkout-items-list">
-                {cartItems.map((item) => (
-                  <div key={item.productID} className="checkout-item">
-                    <div className="item-img">
-                      <img src={`http://localhost:4000/uploads/${item.image}`} alt={item.name} />
-                      <span className="item-qty">{item.quantity}</span>
+                {cartItems.map((item, index) => {
+                  // LOGIC XỬ LÝ ẢNH GIỐNG CARTITEMS.JSX
+                  let imageSrc = "default.jpg";
+                  try {
+                    const parsedImgs = typeof item.images === 'string' ? JSON.parse(item.images) : item.images;
+                    if (parsedImgs && parsedImgs.length > 0) imageSrc = parsedImgs[0];
+                  } catch (e) {
+                    imageSrc = item.image || "default.jpg"; // Fallback nếu có field image đơn
+                  }
+
+                  return (
+                    <div key={`${item.productID}-${index}`} className="checkout-item">
+                      <div className="item-img">
+                        <img src={`http://localhost:4000/uploads/${imageSrc}`} alt={item.name} />
+                      </div>
+                      <div className="item-info">
+                        <p className="item-name">{item.name}</p>
+                        <p className="item-price">{(item.new_price * item.quantity).toLocaleString()}₫</p>
+                      </div>
                     </div>
-                    <div className="item-info">
-                      <p className="item-name">{item.name}</p>
-                      <p className="item-price">{(item.new_price * item.quantity).toLocaleString()}₫</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="summary-pricing">

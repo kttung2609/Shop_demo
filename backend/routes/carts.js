@@ -1,14 +1,50 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const jwt = require("jsonwebtoken");
 
-// 🛒 Thêm vào giỏ hàng
-router.post("/add", (req, res) => {
-  const { userID, productID, quantity = 1 } = req.body;
+const SECRET = "SECRET_KEY";
 
-  if (!userID || !productID) {
-    return res.json({ success: false, message: "Thiếu dữ liệu" });
+//
+// ===== VERIFY TOKEN =====
+//
+const verifyToken = (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+
+    const decoded = jwt.verify(token, SECRET);
+    req.user = decoded; // { id, role }
+
+    next();
+  } catch (err) {
+    return res.status(403).json({ message: "Token không hợp lệ" });
   }
+};
+
+//
+// ===== VERIFY ADMIN =====
+//
+const verifyAdmin = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Không có quyền admin" });
+    }
+    next();
+  });
+};
+
+//
+// ================= CART API =================
+//
+
+// 🛒 ADD
+router.post("/add", verifyToken, (req, res) => {
+  const userID = req.user.id;
+  const { productID, quantity = 1 } = req.body;
 
   const sql = `
     INSERT INTO cart_items (userID, productID, quantity)
@@ -21,23 +57,20 @@ router.post("/add", (req, res) => {
       console.log(err);
       return res.json({ success: false });
     }
-
-    res.json({
-      success: true,
-      message: "Đã thêm vào giỏ hàng",
-    });
+    res.json({ success: true });
   });
 });
 
-router.get("/:userID", (req, res) => {
-  const userID = req.params.userID;
+
+// 📦 GET CART (USER)
+router.get("/", verifyToken, (req, res) => {
+  const userID = req.user.id;
 
   const sql = `
     SELECT 
       c.productID,
       c.quantity,
       p.name,
-      p.old_price,
       p.new_price,
       p.images
     FROM cart_items c
@@ -46,20 +79,19 @@ router.get("/:userID", (req, res) => {
   `;
 
   db.query(sql, [userID], (err, results) => {
-
     if (err) {
       console.log(err);
       return res.status(500).json([]);
     }
-    console.log(results);
     res.json(results);
   });
 });
 
 
-/// 🔼 3. Tăng số lượng
-router.put("/increase", (req, res) => {
-  const { userID, productID } = req.body;
+// 🔼 INCREASE
+router.put("/increase", verifyToken, (req, res) => {
+  const userID = req.user.id;
+  const { productID } = req.body;
 
   const sql = `
     UPDATE cart_items 
@@ -69,15 +101,15 @@ router.put("/increase", (req, res) => {
 
   db.query(sql, [userID, productID], (err) => {
     if (err) return res.json({ success: false });
-
     res.json({ success: true });
   });
 });
 
 
-/// 🔽 4. Giảm số lượng
-router.put("/decrease", (req, res) => {
-  const { userID, productID } = req.body;
+// 🔽 DECREASE
+router.put("/decrease", verifyToken, (req, res) => {
+  const userID = req.user.id;
+  const { productID } = req.body;
 
   const sql = `
     UPDATE cart_items 
@@ -87,56 +119,60 @@ router.put("/decrease", (req, res) => {
 
   db.query(sql, [userID, productID], (err) => {
     if (err) return res.json({ success: false });
-
     res.json({ success: true });
   });
 });
 
 
-/// ❌ 5. Xoá sản phẩm
-  router.delete("/delete", (req, res) => {
-    const { userID, productID } = req.body;
+// ❌ DELETE ITEM
+router.delete("/delete", verifyToken, (req, res) => {
+  const userID = req.user.id;
+  const { productID } = req.body;
 
-    if (!userID || !productID) {
-      return res.json({ success: false, message: "Thiếu dữ liệu" });
-    }
+  const sql = `
+    DELETE FROM cart_items 
+    WHERE userID=? AND productID=?
+  `;
 
-    const sql = `
-      DELETE FROM cart_items 
-      WHERE userID=? AND productID=?
-    `;
-
-    db.query(sql, [userID, productID], (err) => {
-      if (err) {
-        console.log(err);
-        return res.json({ success: false });
-      }
-
-      res.json({ success: true });
-    });
+  db.query(sql, [userID, productID], (err) => {
+    if (err) return res.json({ success: false });
+    res.json({ success: true });
   });
+});
 
-  // 🧹 6. Xoá toàn bộ giỏ hàng của user
-  router.delete("/clear/:userID", (req, res) => {
-    const userID = req.params.userID;
 
-    if (!userID) {
-      return res.json({ success: false, message: "Thiếu userID" });
+// 🧹 CLEAR CART
+router.delete("/clear", verifyToken, (req, res) => {
+  const userID = req.user.id; // Lấy từ verifyToken middleware
+
+  db.query("DELETE FROM cart_items WHERE userID=?", [userID], (err) => {
+    if (err) {
+      console.log(err);
+      return res.json({ success: false });
     }
-
-    const sql = `
-      DELETE FROM cart_items 
-      WHERE userID=?
-    `;
-
-    db.query(sql, [userID], (err) => {
-      if (err) {
-        console.log(err);
-        return res.json({ success: false });
-      }
-
-      res.json({ success: true, message: "Đã xoá toàn bộ giỏ hàng" });
-    });
+    res.json({ success: true, message: "Giỏ hàng đã được xóa sạch" });
   });
+});
 
-  module.exports = router;
+
+// 👑 ADMIN: xem toàn bộ cart
+router.get("/all", verifyAdmin, (req, res) => {
+  const sql = `
+    SELECT 
+      c.userID,
+      c.productID,
+      c.quantity,
+      p.name,
+      p.new_price,
+      p.images
+    FROM cart_items c
+    JOIN products p ON c.productID = p.id
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) return res.json([]);
+    res.json(results);
+  });
+});
+
+module.exports = router;

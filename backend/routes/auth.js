@@ -1,101 +1,136 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const SECRET = "SECRET_KEY";
 
-// ===== ĐĂNG KÝ =====
-router.post("/signup", async (req, res) => {
+//
+// ================= SIGNUP =================
+//
+router.post("/signup", (req, res) => {
   const { name, email, password } = req.body;
-  const jwt = require("jsonwebtoken");
-  try {
-    const hash = await bcrypt.hash(password, 10);
 
-    const sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')";
+  const sql = `
+    INSERT INTO users (name, email, password, role)
+    VALUES (?, ?, ?, 'user')
+  `;
 
-    db.query(sql, [name, email, hash], (err) => {
-      if (err) {
-        return res.json({
-          success: false,
-          message: "Email đã tồn tại",
-        });
+  db.query(sql, [name, email, password], (err) => {
+    if (err) {
+      return res.json({ success: false, message: "Email đã tồn tại" });
+    }
+    res.json({ success: true });
+  });
+});
+
+//
+// ================= LOGIN =================
+//
+router.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  db.query(
+    "SELECT * FROM users WHERE email=?",
+    [email],
+    (err, results) => {
+      if (err || results.length === 0) {
+        return res.json({ success: false, message: "Sai email" });
       }
+
+      const user = results[0];
+
+      // 👉 SO SÁNH TRỰC TIẾP
+      if (password !== user.password) {
+        return res.json({ success: false, message: "Sai mật khẩu" });
+      }
+
+      const token = jwt.sign(
+        { id: user.id, role: user.role },
+        SECRET,
+        { expiresIn: "7d" }
+      );
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+      });
 
       res.json({
         success: true,
-        message: "Đăng ký thành công",
+        role: user.role,
       });
-    });
-  } catch (err) {
-    res.json({ success: false });
-  }
+    }
+  );
 });
 
+//
+// ================= LOGOUT =================
+//
+router.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ success: true });
+});
 
-// ===== ĐĂNG NHẬP (CHUNG CHO ADMIN + USER) =====
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+//
+// ================= GET CURRENT USER =================
+//
+router.get("/me", (req, res) => {
+  const token = req.cookies?.token;
 
-  const sql = "SELECT * FROM users WHERE email=?";
-  db.query(sql, [email], async (err, result) => {
-    if (err) return res.json({ success: false });
+  if (!token) return res.status(401).json(null);
 
-    if (result.length === 0) {
-      return res.json({
-        success: false,
-        message: "Sai email hoặc mật khẩu",
-      });
-    }
+  jwt.verify(token, SECRET, (err, decoded) => {
+    if (err) return res.status(403).json(null);
 
-    const user = result[0];
-
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) {
-      return res.json({
-        success: false,
-        message: "Sai email hoặc mật khẩu",
-      });
-    }
-    const token = jwt.sign(
-      {
-        id: user.id,
-        role: user.role.trim().toLowerCase(),
-      },
-      "SECRET_KEY",
-      { expiresIn: "1d" }
-    );
-
-    return res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        role: user.role.trim().toLowerCase(),
-      },
+    // Lấy thêm name và avatar từ DB
+    db.query("SELECT id, name, email, role, avatar FROM users WHERE id = ?", [decoded.id], (err, results) => {
+      if (err || results.length === 0) return res.status(404).json(null);
+      
+      const user = results[0];
+      res.json(user); // Trả về đầy đủ thông tin
     });
   });
 });
-const verifyToken = (req, res, next) => {
-  const token = req.headers["authorization"];
 
-  if (!token) return res.status(403).json({ message: "No token" });
 
-  jwt.verify(token, "SECRET_KEY", (err, decoded) => {
-    if (err) return res.status(401).json({ message: "Invalid token" });
+//
+// ================= MIDDLEWARE =================
+//
+
+// 👉 user đăng nhập là được
+const verifyUser = (req, res, next) => {
+  const token = req.cookies?.token;
+
+  if (!token) return res.status(401).json({ message: "No token" });
+
+  jwt.verify(token, SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ message: "Invalid token" });
 
     req.user = decoded;
     next();
   });
 };
 
-const isAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Bạn không có quyền" });
-  }
-  next();
+// 👉 chỉ admin
+const verifyAdmin = (req, res, next) => {
+  const token = req.cookies?.token;
+
+  if (!token) return res.status(401).json({ message: "No token" });
+
+  jwt.verify(token, SECRET, (err, decoded) => {
+    if (err || decoded.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    req.user = decoded;
+    next();
+  });
 };
 
+//
+// ================= EXPORT =================
+//
 module.exports = router;
+module.exports.verifyUser = verifyUser;
+module.exports.verifyAdmin = verifyAdmin;

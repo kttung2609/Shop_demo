@@ -1,29 +1,32 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
-const authRoutes = require('./routes/auth'); // THÊM
+const authRoutes = require("./routes/auth");
 const categoryRoutes = require("./routes/Categories");
 const userRoutes = require("./routes/users");
 const orderRoutes = require("./routes/orders");
-const loginRouter = require("./routes/login");
 const cartRoutes = require("./routes/carts")
 const productRoutes = require('./routes/products');
 const statsRoutes = require('./routes/stats');
 const fs = require("fs");
 const path = require("path");
-
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 
 const app = express();
-
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174"],
+  credentials: true
+}));
+app.use(cookieParser());
+app.use(bodyParser.json());
 app.use(bodyParser.json());
 // app.use("/api/login", loginRouter);
 app.use("/orders", orderRoutes);
 // console.log("ORDER ROUTE LOADED");
 app.use("/api/categories", categoryRoutes);
 app.use('/products', productRoutes);
-app.use('/auth', authRoutes); 
+app.use("/auth", authRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);

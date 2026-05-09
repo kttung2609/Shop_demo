@@ -10,7 +10,8 @@ import {
   PhoneCall,
   Gift,
   ShoppingCart,
-  Edit
+  Edit,
+  Loader2 // Thêm icon loading
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -21,22 +22,51 @@ const ProductDisplayAdmin = (props) => {
   
   const [mainImage, setMainImage] = useState("");
   const [tab, setTab] = useState("desc");
+  const [isAdding, setIsAdding] = useState(false); // State xử lý loading nút
+  const [showToast, setShowToast] = useState(false); // State hiện thông báo thành công
 
   useEffect(() => {
-    if (product && product.images && product.images.length > 0) {
-      setMainImage(product.images[0]);
+    if (product) {
+      let imagesArray = [];
+      try {
+        imagesArray = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+      } catch (e) {
+        imagesArray = product.images || [];
+      }
+      if (imagesArray && imagesArray.length > 0) {
+        setMainImage(imagesArray[0]);
+      }
     }
   }, [product]);
 
   const addToCart = async (productID) => {
     const userID = storedUser?.id || storedUser?.userID;
-    const res = await fetch("http://localhost:4000/api/cart/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userID, productID, quantity: 1 }),
-    });
-    const data = await res.json();
-    alert("Đã thêm vào giỏ hàng!");
+    if (!userID) {
+        alert("Vui lòng đăng nhập!");
+        return;
+    }
+
+    setIsAdding(true); 
+    try {
+      const res = await fetch("http://localhost:4000/api/cart/add", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userID, productID, quantity: 1 }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        // Hiện thông báo thành công
+        setShowToast(true);
+        // Tự động ẩn sau 3 giây
+        setTimeout(() => setShowToast(false), 3000);
+      }
+    } catch (err) {
+      console.error("Lỗi:", err);
+    } finally {
+      setIsAdding(false); // Tắt loading
+    }
   };
 
   if (!product) return <div className="loading-spinner">Đang tải...</div>;
@@ -47,7 +77,12 @@ const ProductDisplayAdmin = (props) => {
 
   return (
     <div className="product-admin-container">
-      {/* 1. BREADCRUMBS */}
+      {/* ----- THÔNG BÁO THÀNH CÔNG (TOAST) ----- */}
+      <div className={`success-toast ${showToast ? "show" : ""}`}>
+        <CheckCircle size={20} />
+        <span>Thêm vào giỏ hàng thành công!</span>
+      </div>
+
       <div className="admin-breadcrumb">
         <span>Admin</span> <ChevronRight size={14} />
         <span>Danh sách</span> <ChevronRight size={14} />
@@ -55,10 +90,9 @@ const ProductDisplayAdmin = (props) => {
       </div>
 
       <div className="product-admin-content">
-        {/* 2. LEFT: GALLERY */}
         <div className="product-admin-left">
           <div className="admin-thumbs-vertical">
-            {product.images?.map((img, i) => (
+            {(typeof product.images === 'string' ? JSON.parse(product.images) : product.images)?.map((img, i) => (
               <div 
                 key={i} 
                 className={`admin-thumb-item ${mainImage === img ? "active" : ""}`}
@@ -82,7 +116,6 @@ const ProductDisplayAdmin = (props) => {
           </div>
         </div>
 
-        {/* 3. RIGHT: INFO & ACTIONS */}
         <div className="product-admin-right">
           <div className="admin-header-flex">
             <h1 className="admin-product-name">{product.name}</h1>
@@ -93,9 +126,7 @@ const ProductDisplayAdmin = (props) => {
           
           <div className="admin-product-rating">
             <div className="admin-stars">
-              <Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" />
-              <Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" />
-              <Star size={16} fill="currentColor" />
+              {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
             </div>
             <span className="admin-status-stock">
                <CheckCircle size={14} /> Kho: {product.quantity} sản phẩm
@@ -109,7 +140,6 @@ const ProductDisplayAdmin = (props) => {
             )}
           </div>
 
-          {/* PROMOTION BOX */}
           <div className="admin-promo-box">
             <div className="admin-promo-title">
               <Gift size={18} /> QUÀ TẶNG KÈM & ƯU ĐÃI
@@ -122,11 +152,18 @@ const ProductDisplayAdmin = (props) => {
 
           <div className="admin-actions">
             <button 
-              className="admin-btn-cart"
+              className={`admin-btn-cart ${isAdding ? "btn-loading" : ""}`}
               onClick={() => addToCart(product.id)}
-              disabled={product.quantity <= 0}
+              disabled={product.quantity <= 0 || isAdding}
             >
-              <ShoppingCart size={20} /> THÊM VÀO GIỎ (TEST)
+              {isAdding ? (
+                <Loader2 className="spinner" size={20} />
+              ) : (
+                <>
+                THÊM VÀO GIỎ
+                  {/* <button onClick={() => addToCart(product.id)}></button> */}
+                </>
+              )}
             </button>
           </div>
           
@@ -135,7 +172,6 @@ const ProductDisplayAdmin = (props) => {
           </div>
         </div>
 
-        {/* 4. SIDEBAR TRUST */}
         <div className="product-admin-trust">
           <div className="admin-trust-item">
             <Truck /><p>GIAO HÀNG NHANH</p>
@@ -149,7 +185,6 @@ const ProductDisplayAdmin = (props) => {
         </div>
       </div>
 
-      {/* 5. TABS */}
       <div className="product-admin-tabs">
         <div className="admin-tabs-header">
           <button className={tab === "desc" ? "active" : ""} onClick={() => setTab("desc")}>MÔ TẢ</button>

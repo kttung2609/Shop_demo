@@ -1,217 +1,63 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext } from 'react';
 import { ShopContext } from '../../Context/ShopContext';
-import './Navbar.css'
-import logo from '../assets/logo.png'
-import cart_icon from '../assets/cart_icon.png'
-import orders_icon from '../assets/order.png'
-import { Link, useNavigate } from 'react-router-dom'
+import './Navbar.css';
+import logo from '../assets/logo.png';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, ClipboardList, LogOut, User as UserIcon } from 'lucide-react';
 
 export const Navbar = () => {
-
-  const { getTotalCartItems, all_product } = useContext(ShopContext);
-
-  const [user, setUser] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [showMenu, setShowMenu] = useState(false);
-
-  // SEARCH
-  const [search, setSearch] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-
+  const { getTotalCartItems, user, setUser } = useContext(ShopContext);
   const navigate = useNavigate();
 
-  // ===== HANDLE SEARCH =====
-  const handleSearch = () => {
-    if (search.trim() !== "") {
-      navigate(`/search?q=${search}`);
-      setSearch("");
-      setSuggestions([]);
-    }
+  const handleLogout = async () => {
+    await fetch("http://localhost:4000/auth/logout", { method: "POST", credentials: "include" });
+    setUser(null);
+    navigate("/login");
   };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  // ===== LOAD USER =====
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-  }, []);
-
-  // ===== LOAD CATEGORY =====
-  useEffect(() => {
-    fetch("http://localhost:4000/api/categories")
-      .then(res => res.json())
-      .then(data => setCategories(data));
-  }, []);
-
-  // ===== SEARCH SUGGESTION =====
-  useEffect(() => {
-    if (search.trim() === "") {
-      setSuggestions([]);
-      return;
-    }
-
-    const keyword = search.toLowerCase();
-
-    const productList = Array.isArray(all_product)
-      ? all_product
-      : all_product?.data || [];
-
-    const filtered = productList.filter(item =>
-      item.name.toLowerCase().includes(keyword)
-    );
-
-    setSuggestions(filtered.slice(0, 6));
-
-  }, [search, all_product]);
 
   return (
-    <div className='navbar'>
-
-      {/* LEFT */}
-      <div className='nav-left'>
-
-        {/* CATEGORY */}
-        <div className='nav-category' onClick={() => setShowMenu(!showMenu)}>
-          ☰ Danh mục ▼
-          {showMenu && (
-            <div className="dropdown-menu">
-              {categories.map((cat) => (
-                <Link 
-                  key={cat.id} 
-                  to={`/${cat.slug}`} 
-                  className="dropdown-item"
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          )}
+    <div className='navbar-container'>
+      <div className='navbar-wrapper'>
+        <div className='nav-left'>
+          <Link to="/" className='nav-logo'>
+            <img src={logo} alt="Logo" />
+            <span>BADMINTON<span>SHOP</span></span>
+          </Link>
         </div>
 
-        {/* LOGO */}
-        <Link to="/" className='nav-logo'>
-          <img src={logo} alt="" />
-          <p>BadmintonShop</p>
-        </Link>
+        <div className='nav-right'>
+          <Link to='/orders' className='nav-icon-link'><ClipboardList size={26} /></Link>
+          <div className='nav-cart-box' onClick={() => navigate("/cart")}>
+            <ShoppingCart size={26} />
+            <span className='cart-badge'>{getTotalCartItems()}</span>
+          </div>
 
-      </div>
-
-      {/* SEARCH */}
-      <div className='nav-search'>
-
-        <input
-          type="text"
-          placeholder='Tìm kiếm sản phẩm'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-
-        <button className="search-btn" onClick={handleSearch}>
-          🔍
-        </button>
-
-        {/* DROPDOWN */}
-        {suggestions.length > 0 && (
-          <div className="search-dropdown">
-
-            {/* CATEGORY */}
-            <div className="search-category">
-              <p>Danh mục sản phẩm</p>
-
-              <div className="category-list">
-                {categories
-                  .filter(cat => 
-                    cat.name.toLowerCase().includes(search.toLowerCase())
-                  )
-                  .slice(0, 6)
-                  .map(cat => (
-                    <Link key={cat.id} to={`/${cat.slug}`}>
-                      {cat.name}
-                    </Link>
-                  ))}
-              </div>
-            </div>
-
-            {/* PRODUCTS */}
-            <div className="search-products">
-              <p>Sản phẩm</p>
-
-              {suggestions.map(item => (
-                <div
-                  key={item.id}
-                  className="search-item"
-                  onClick={() => {
-                    navigate(`/product/${item.id}`);
-                    setSearch("");
-                    setSuggestions([]);
-                  }}
-                >
+          <div className='nav-user-section'>
+            {user && user.role === "user" ? (
+              <div className='user-profile-dropdown'>
+                <div className='user-trigger'>
                   <img
-                    src={`http://localhost:4000/uploads/${item.images?.[0]}`}
-                    alt=""
+                    src={user.avatar ? `http://localhost:4000/uploads/avatars/${user.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                    className="user-avatar"
+                    alt="avatar"
                   />
-
-                  <div>
-                    <p>{item.name}</p>
-                    <span className="price">
-                      {item.new_price}đ
-                    </span>
-                  </div>
+                  <span className="user-name-label">{user.name}</span>
                 </div>
-              ))}
-
-            </div>
-
-          </div>
-        )}
-
-      </div>
-
-      {/* RIGHT */}
-      <div className='nav-right'>
-
-        <div className='nav-phone'>
-          📞 0974594175
-        </div>
-
-        <div className='nav-order-box'>
-          <Link to='/orders'>
-            <img width="30px" src={orders_icon} alt="" />
-          </Link>
-        </div>
-
-        <div className='nav-cart-box'>
-          <Link to='/cart'>
-            <img src={cart_icon} alt="" />
-          </Link>
-
-          <div className='nav-cart-count'>
-            {getTotalCartItems()}
+                <div className='user-dropdown-menu'>
+                  <Link to="/profile" className="dropdown-link">Hồ sơ của tôi</Link>
+                  <Link to="/orders" className="dropdown-link">Đơn hàng</Link>
+                  <button onClick={handleLogout} className='logout-btn'><LogOut size={16} /> Đăng xuất</button>
+                </div>
+              </div>
+            ) : (
+              <Link to="/login" className='login-btn-nav'>
+                <UserIcon size={20} />
+                <span>Đăng nhập</span>
+              </Link>
+            )}
           </div>
         </div>
-
-        {user ? (
-          <Link to="/profile">
-            <img
-              src={user.avatar || "https://via.placeholder.com/40"}
-              className="nav-avatar"
-              alt=""
-            />
-          </Link>
-        ) : (
-          <Link to='/login'>
-            <button>Login</button>
-          </Link>
-        )}
-
       </div>
-
     </div>
-  )
-}
+  );
+};

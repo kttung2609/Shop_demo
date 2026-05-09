@@ -6,10 +6,10 @@ import {
   Search, 
   Plus, 
   ChevronRight, 
-  LayoutGrid, 
   Filter, 
   Package,
-  AlertCircle 
+  AlertCircle,
+  LayoutDashboard
 } from "lucide-react"
 
 const Popular = () => {
@@ -18,9 +18,8 @@ const Popular = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
 
-  const itemsPerPage = 15;
+  const itemsPerPage = 15; // 5 cột x 3 hàng = 15 là con số hoàn hảo
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -70,8 +69,6 @@ const Popular = () => {
   const handleSearch = () => {
     if (search.trim() !== "") {
       navigate(`/search?q=${search}`);
-      setSearch("");
-      setSuggestions([]);
     }
   };
 
@@ -81,23 +78,35 @@ const Popular = () => {
 
   return (
     <div className='admin-list-page'>
-      {/* 1. BREADCRUMBS */}
-      <div className="admin-breadcrumb">
-        <span>Quản trị</span> <ChevronRight size={14} />
-        <span className="active">Danh sách sản phẩm</span>
+      {/* 1. BREADCRUMBS & HEADER */}
+      <div className="admin-list-top">
+        <div className="admin-breadcrumb">
+          <span>Quản trị</span> <ChevronRight size={14} />
+          <span className="active">Danh sách sản phẩm</span>
+        </div>
+        
+        <div className="admin-header-main">
+          <div className="header-text">
+            <h1>Kho Sản Phẩm</h1>
+            <p>Quản lý và cập nhật thông tin hàng hóa trong kho</p>
+          </div>
+          <button className="btn-add-product" onClick={() => navigate("/addproduct")}>
+            <Plus size={20} /> THÊM SẢN PHẨM
+          </button>
+        </div>
       </div>
 
-      <div className="admin-container">
-        {/* 2. SIDEBAR FILTER (Giống trang User) */}
-        <aside className="admin-sidebar">
-          <div className="sidebar-box">
-            <h3 className="sidebar-title"><Filter size={18} /> PHÂN LOẠI</h3>
-            <ul className="admin-cat-list">
+      <div className="admin-main-layout">
+        {/* 2. SIDEBAR FILTER */}
+        <aside className="admin-list-sidebar">
+          <div className="sidebar-filter-card">
+            <h3 className="sidebar-filter-title"><Filter size={18} /> BỘ LỌC</h3>
+            <ul className="filter-cat-list">
               <li 
                 className={!category ? "active" : ""} 
                 onClick={() => navigate("/listproduct")}
               >
-                Tất cả sản phẩm
+                <LayoutDashboard size={16} /> Tất cả sản phẩm
               </li>
               {categories.map((cat) => (
                 <li 
@@ -109,102 +118,92 @@ const Popular = () => {
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div className="admin-stats-box">
-             <div className="stat-item">
-                <Package size={20} />
-                <div>
-                   <p>Tổng sản phẩm</p>
-                   <strong>{products.length}+</strong>
-                </div>
-             </div>
+            
+            <div className="sidebar-stats">
+               <div className="stat-box">
+                  <Package size={20} />
+                  <span>Hiện có: <strong>{products.length}</strong> sản phẩm</span>
+               </div>
+            </div>
           </div>
         </aside>
 
-        {/* 3. MAIN CONTENT */}
-        <main className="admin-main-content">
-          <div className="admin-header-actions">
-            <div className="header-title-box">
-              <h1>Quản Lý Kho Hàng</h1>
-              <p>Hiển thị {products.length} sản phẩm trong danh mục</p>
-            </div>
-            <button className="btn-add-product" onClick={() => navigate("/addproduct")}>
-              <Plus size={20} /> THÊM SẢN PHẨM MỚI
-            </button>
-          </div>
-
-          {/* SEARCH BAR CHUYÊN NGHIỆP */}
-          <div className="admin-search-bar">
-            <div className="search-wrapper">
+        {/* 3. PRODUCT CONTENT */}
+        <div className="admin-list-content">
+          {/* SEARCH BAR */}
+          <div className="admin-search-container">
+            <div className="search-input-wrapper">
               <Search className="search-icon" size={20} />
               <input 
                 type="text" 
-                placeholder="Tìm mã sản phẩm hoặc tên sản phẩm..."
+                placeholder="Tìm kiếm sản phẩm nhanh..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <button onClick={handleSearch}>Tìm kiếm</button>
+              <button onClick={handleSearch}>TÌM</button>
             </div>
           </div>
 
-          {/* GRID DANH SÁCH */}
+          {/* PRODUCT GRID - HIỂN THỊ 5 CỘT */}
           {loading ? (
-            <div className="admin-loading">Đang tải dữ liệu...</div>
+            <div className="admin-loading-state">Đang tải dữ liệu...</div>
           ) : (
-            <div className="admin-product-grid">
-              {products.length > 0 ? (
-                products.map((item) => (
-                  <div className="admin-card-wrapper" key={item.id}>
-                    <Item
-                      id={item.id}
-                      name={item.name}
-                      image={item.images?.[0]}
-                      quantity={item.quantity}
-                      new_price={item.new_price}
-                      old_price={item.old_price}
-                      onDelete={removeProduct}
-                    />
+            <>
+              <div className="admin-product-grid-main">
+                {products.length > 0 ? (
+                  products.map((item) => (
+                    <div className="admin-grid-item" key={item.id}>
+                      <Item
+                        id={item.id}
+                        name={item.name}
+                        image={item.images?.[0]}
+                        quantity={item.quantity}
+                        new_price={item.new_price}
+                        old_price={item.old_price}
+                        onDelete={removeProduct}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="admin-no-data">
+                    <AlertCircle size={48} />
+                    <p>Không tìm thấy sản phẩm nào trong mục này.</p>
                   </div>
-                ))
-              ) : (
-                <div className="no-data">
-                   <AlertCircle size={40} />
-                   <p>Không có sản phẩm nào trong mục này.</p>
+                )}
+              </div>
+
+              {/* PAGINATION */}
+              {totalPages > 1 && (
+                <div className="admin-pagination-footer">
+                  <button 
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                  >
+                    Trang trước
+                  </button>
+                  <div className="page-list">
+                    {[...Array(totalPages)].map((_, index) => (
+                      <button
+                        key={index}
+                        className={currentPage === index + 1 ? "active" : ""}
+                        onClick={() => setCurrentPage(index + 1)}
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                  <button 
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                  >
+                    Trang sau
+                  </button>
                 </div>
               )}
-            </div>
+            </>
           )}
-
-          {/* PAGINATION */}
-          {totalPages > 1 && (
-            <div className="admin-pagination">
-              <button 
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-              >
-                Trải
-              </button>
-              <div className="page-numbers">
-                {[...Array(totalPages)].map((_, index) => (
-                  <button
-                    key={index}
-                    className={currentPage === index + 1 ? "active" : ""}
-                    onClick={() => setCurrentPage(index + 1)}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
-              </div>
-              <button 
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-              >
-                Phải
-              </button>
-            </div>
-          )}
-        </main>
+        </div>
       </div>
     </div>
   )
