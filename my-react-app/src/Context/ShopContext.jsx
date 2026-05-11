@@ -19,7 +19,7 @@ const ShopContextProvider = (props) => {
 
   const fetchUserData = async () => {
     try {
-      const res = await fetch("http://localhost:4000/auth/me", { credentials: "include" });
+      const res = await fetch("http://localhost:4000/auth/me?role=user", { credentials: "include" });
       if (res.ok) {
         const userData = await res.json();
         if (userData && userData.role === "user") {

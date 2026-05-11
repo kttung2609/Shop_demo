@@ -10,7 +10,7 @@ const CartItems = () => {
 
   // ===== CHECK ADMIN =====
   useEffect(() => {
-    fetch("http://localhost:4000/auth/me", {
+    fetch("http://localhost:4000/auth/me?role=admin", {
       credentials: "include",
     })
       .then(res => {

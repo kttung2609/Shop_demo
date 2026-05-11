@@ -51,10 +51,17 @@ router.post("/login", (req, res) => {
         { expiresIn: "7d" }
       );
 
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-      });
+      if (user.role === "admin") {
+        res.cookie("admin_token", token, {
+          httpOnly: true,
+          sameSite: "lax",
+        });
+      } else {
+        res.cookie("token", token, {
+          httpOnly: true,
+          sameSite: "lax",
+        });
+      }
 
       res.json({
         success: true,
@@ -69,6 +76,7 @@ router.post("/login", (req, res) => {
 //
 router.post("/logout", (req, res) => {
   res.clearCookie("token");
+  res.clearCookie("admin_token");
   res.json({ success: true });
 });
 
@@ -76,19 +84,28 @@ router.post("/logout", (req, res) => {
 // ================= GET CURRENT USER =================
 //
 router.get("/me", (req, res) => {
-  const token = req.cookies?.token;
+  const role = req.query.role;
+  let token;
+
+  if (role === "admin") {
+    token = req.cookies?.admin_token;
+  } else if (role === "user") {
+    token = req.cookies?.token;
+  } else {
+    // nếu không truyền role, ưu tiên admin_token khi cả hai đều tồn tại
+    token = req.cookies?.admin_token || req.cookies?.token;
+  }
 
   if (!token) return res.status(401).json(null);
 
   jwt.verify(token, SECRET, (err, decoded) => {
     if (err) return res.status(403).json(null);
 
-    // Lấy thêm name và avatar từ DB
     db.query("SELECT id, name, email, role, avatar FROM users WHERE id = ?", [decoded.id], (err, results) => {
       if (err || results.length === 0) return res.status(404).json(null);
       
       const user = results[0];
-      res.json(user); // Trả về đầy đủ thông tin
+      res.json(user);
     });
   });
 });
@@ -114,7 +131,7 @@ const verifyUser = (req, res, next) => {
 
 // 👉 chỉ admin
 const verifyAdmin = (req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req.cookies?.admin_token;
 
   if (!token) return res.status(401).json({ message: "No token" });
 

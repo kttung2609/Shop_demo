@@ -1,48 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
-const jwt = require("jsonwebtoken");
-
-const SECRET = "SECRET_KEY";
-
-//
-// ===== VERIFY TOKEN =====
-//
-const verifyToken = (req, res, next) => {
-  try {
-    const token = req.cookies?.token;
-
-    if (!token) {
-      return res.status(401).json({ message: "Chưa đăng nhập" });
-    }
-
-    const decoded = jwt.verify(token, SECRET);
-    req.user = decoded; // { id, role }
-
-    next();
-  } catch (err) {
-    return res.status(403).json({ message: "Token không hợp lệ" });
-  }
-};
-
-//
-// ===== VERIFY ADMIN =====
-//
-const verifyAdmin = (req, res, next) => {
-  verifyToken(req, res, () => {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Không có quyền admin" });
-    }
-    next();
-  });
-};
+const { verifyUser, verifyAdmin } = require("./auth"); // Import đúng tên đã export từ auth.js
 
 //
 // ================= CART API =================
 //
 
-// 🛒 ADD
-router.post("/add", verifyToken, (req, res) => {
+// 🛒 ADD (Sửa verifyToken thành verifyUser)
+router.post("/add", verifyUser, (req, res) => {
   const userID = req.user.id;
   const { productID, quantity = 1 } = req.body;
 
@@ -63,7 +29,7 @@ router.post("/add", verifyToken, (req, res) => {
 
 
 // 📦 GET CART (USER)
-router.get("/", verifyToken, (req, res) => {
+router.get("/", verifyUser, (req, res) => {
   const userID = req.user.id;
 
   const sql = `
@@ -89,7 +55,7 @@ router.get("/", verifyToken, (req, res) => {
 
 
 // 🔼 INCREASE
-router.put("/increase", verifyToken, (req, res) => {
+router.put("/increase", verifyUser, (req, res) => {
   const userID = req.user.id;
   const { productID } = req.body;
 
@@ -107,7 +73,7 @@ router.put("/increase", verifyToken, (req, res) => {
 
 
 // 🔽 DECREASE
-router.put("/decrease", verifyToken, (req, res) => {
+router.put("/decrease", verifyUser, (req, res) => {
   const userID = req.user.id;
   const { productID } = req.body;
 
@@ -125,7 +91,7 @@ router.put("/decrease", verifyToken, (req, res) => {
 
 
 // ❌ DELETE ITEM
-router.delete("/delete", verifyToken, (req, res) => {
+router.delete("/delete", verifyUser, (req, res) => {
   const userID = req.user.id;
   const { productID } = req.body;
 
@@ -142,8 +108,8 @@ router.delete("/delete", verifyToken, (req, res) => {
 
 
 // 🧹 CLEAR CART
-router.delete("/clear", verifyToken, (req, res) => {
-  const userID = req.user.id; // Lấy từ verifyToken middleware
+router.delete("/clear", verifyUser, (req, res) => {
+  const userID = req.user.id; 
 
   db.query("DELETE FROM cart_items WHERE userID=?", [userID], (err) => {
     if (err) {
@@ -155,7 +121,7 @@ router.delete("/clear", verifyToken, (req, res) => {
 });
 
 
-// 👑 ADMIN: xem toàn bộ cart
+// 👑 ADMIN: xem toàn bộ cart của hệ thống
 router.get("/all", verifyAdmin, (req, res) => {
   const sql = `
     SELECT 

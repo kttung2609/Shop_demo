@@ -9,9 +9,10 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:4000/auth/me", { credentials: "include" })
+    fetch("http://localhost:4000/auth/me?role=admin", { credentials: "include" })
       .then(res => res.json())
       .then(data => {
+        console.log("AdminLogin /me data:", data);
         if (data && data.role === "admin") {
           navigate("/listproduct");
         }

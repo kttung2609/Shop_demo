@@ -6,7 +6,7 @@ const ProtectedRoute = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:4000/auth/me", { credentials: "include" })
+    fetch("http://localhost:4000/auth/me?role=admin", { credentials: "include" })
       .then(res => {
         if (!res.ok) throw new Error();
         return res.json();

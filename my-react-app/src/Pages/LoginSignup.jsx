@@ -11,7 +11,7 @@ const LoginSignup = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:4000/auth/me", { credentials: "include" })
+    fetch("http://localhost:4000/auth/me?role=user", { credentials: "include" })
       .then(res => res.json())
       .then(data => {
         if (data && data.role === "user") {
