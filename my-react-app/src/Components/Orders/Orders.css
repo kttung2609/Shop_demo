@@ -220,7 +220,38 @@
   cursor: pointer;
   border-radius: 4px;
 }
+.btn-item-review {
+  margin-top: 10px;
+  background: white;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.3s;
+  width: fit-content;
+}
 
+.btn-item-review:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Các nút trong Card Footer */
+.btn-rebuy {
+  background: var(--primary-color) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-rebuy:hover {
+  filter: brightness(1.1);
+}
 /* Mobile */
 @media (max-width: 600px) {
   .orders-tabs-nav { overflow-x: auto; }

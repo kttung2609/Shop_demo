@@ -67,7 +67,6 @@ const Orders = () => {
   return (
     <div className="admin-orders-page">
       <div className="orders-container-full">
-        {/* HEADER */}
         <div className="admin-orders-header-top">
           <div className="title-box">
             <h1>Quản Lý Đơn Hàng</h1>
@@ -78,7 +77,6 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* TABS NAVIGATION */}
         <div className="admin-orders-tabs">
           {[
             { key: "pending", label: "Chờ xác nhận", icon: <Clock size={16}/> },
@@ -96,7 +94,6 @@ const Orders = () => {
           ))}
         </div>
 
-        {/* DATA TABLE */}
         <div className="orders-table-wrapper">
           <table className="modern-admin-table">
             <thead>

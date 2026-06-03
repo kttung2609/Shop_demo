@@ -88,7 +88,7 @@
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 8px;
-  color: var(--text-dark);
+  /* color: var(--text-dark); */
 }
 
 .input-wrapper {
@@ -106,19 +106,29 @@
 
 .input-wrapper input {
   width: 100%;
-  padding: 14px 15px 14px 45px;
-  border: 2px solid #f1f2f6;
-  background: #f8f9fa;
-  border-radius: 10px;
+  padding: 12px 15px 12px 55px;
+  border: none;
+  border-bottom: 2px solid #e8eaed;
+  background: transparent;
   outline: none;
   font-size: 15px;
-  transition: all 0.3s ease;
+  font-weight: 500;
+  color: var(--text-dark);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-wrapper input::placeholder {
+  color: #c9cace;
+  font-weight: 400;
+}
+
+.input-wrapper input:hover {
+  border-bottom-color: #d0d0d0;
 }
 
 .input-wrapper input:focus {
-  border-color: var(--primary-color);
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(255, 77, 79, 0.1);
+  border-bottom-color: var(--primary-color);
+  background: transparent;
 }
 
 .input-wrapper input:focus + .field-icon {

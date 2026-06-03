@@ -7,7 +7,6 @@ import { ShopContext } from "../../Context/ShopContext";
 const CartItems = () => {
   const navigate = useNavigate();
   
-  // Lấy dữ liệu từ Context (Đảm bảo Navbar và Cart luôn khớp nhau)
   const { 
     user, 
     cartItems, 
@@ -18,12 +17,10 @@ const CartItems = () => {
     fetchCart 
   } = useContext(ShopContext);
 
-  // Load lại giỏ hàng mới nhất khi vào trang
   useEffect(() => {
     if (user) fetchCart();
   }, [user]);
 
-  // Nếu chưa đăng nhập
   if (!user) {
     return (
       <div className="cart-empty-container">
@@ -42,7 +39,6 @@ const CartItems = () => {
   return (
     <div className='cart-page-wrapper'>
       <div className="cart-container-full">
-        {/* BREADCRUMB */}
         <div className="cart-navigation">
           <span onClick={() => navigate("/")}>Trang chủ</span> <ChevronRight size={14} />
           <span className="active">Giỏ hàng của bạn</span>
@@ -61,7 +57,6 @@ const CartItems = () => {
         ) : (
           <div className="cart-flex-layout">
             
-            {/* PHẦN DANH SÁCH SẢN PHẨM (KÉO DÀI) */}
             <div className="cart-products-section">
               <div className="cart-table-header">
                 <span className="h-prod">SẢN PHẨM</span>
@@ -72,7 +67,6 @@ const CartItems = () => {
 
               <div className="cart-items-body">
                 {cartItems.map((item, index) => {
-                  // Xử lý ảnh (Parse nếu là string JSON)
                   let imageSrc = "default.jpg";
                   try {
                     const parsedImgs = typeof item.images === 'string' ? JSON.parse(item.images) : item.images;
@@ -123,7 +117,6 @@ const CartItems = () => {
               </div>
             </div>
 
-            {/* PHẦN TỔNG KẾT (SIDEBAR) */}
             <aside className="cart-summary-sidebar">
               <div className="summary-sticky-card">
                 <h3 className="summary-card-title">TỔNG ĐƠN HÀNG</h3>

@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import "./Admin.css";
 import Sidebar from "../../Components/Sidebar/Sidebar";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import AddProduct from "../../Components/AddProduct/AddProduct";
 import ListProduct from "../../Components/ListProduct/ListProduct";
@@ -12,27 +12,16 @@ import ProtectedRoute from "../../Components/ProtectedRoute";
 import UpdateProduct from "../../Components/UpdateProduct/UpdateProduct";
 import AdminStats from "../../Components/AdminStats/AdminStats";
 import ProductAdmin from "../../Pages/ProductAdmin";
-import CartAdmin from"../../Components/CartItems/CartItems"
 import CartItems from "../../Components/CartItems/CartItems";
-import Checkout from "../../Components/Checkout/Checkout"
+import Checkout from "../../Components/Checkout/Checkout";
 const Admin = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const admin = localStorage.getItem("admin");
-
-    // if (!admin) {
-    //   navigate("/login");
-    // }
-  }, []);
-
   return (
     <div className="Admin">
       <Sidebar />
       
       <Routes>
         <Route
-          path="stats"
+          path="/stats"
           element={
             <ProtectedRoute>
               <AdminStats />
@@ -40,7 +29,7 @@ const Admin = () => {
           }
         />
         <Route
-          path="listproduct"
+          path="/listproduct"
           element={
             <ProtectedRoute>
               <ListProduct />
@@ -49,7 +38,7 @@ const Admin = () => {
         />
 
         <Route
-          path="addproduct"
+          path="/addproduct"
           element={
             <ProtectedRoute>
               <AddProduct />
@@ -58,7 +47,7 @@ const Admin = () => {
         />
 
         <Route
-          path="Categories"
+          path="/categories"
           element={
             <ProtectedRoute>
               <Category />
@@ -67,7 +56,7 @@ const Admin = () => {
         />
 
         <Route
-          path="Users"
+          path="/users"
           element={
             <ProtectedRoute>
               <Users />
@@ -76,7 +65,7 @@ const Admin = () => {
         />
 
         <Route
-          path="Orders"
+          path="/orders"
           element={
             <ProtectedRoute>
               <Orders />
@@ -84,24 +73,24 @@ const Admin = () => {
           }
         />
         <Route
-          path="cart"
+          path="/cart"
           element={
             <ProtectedRoute>
-              <CartAdmin />
+              <CartItems />
             </ProtectedRoute>
           }
         />
         <Route
-          path="checkout"
+          path="/checkout"
           element={
             <ProtectedRoute>
               <Checkout />
             </ProtectedRoute>
           }
         />
-        {/* <Route path="/cart" element={<CartAdmin />} /> */}
         <Route path="/product/:id" element={<ProductAdmin />} />
         <Route path="/update/:id" element={<UpdateProduct />} />
+        <Route path="*" element={<Navigate to="/listproduct" replace />} />
       </Routes>
     </div>
   );

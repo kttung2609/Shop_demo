@@ -19,7 +19,6 @@ const Home = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
 
-  // Danh sách Banner từ link bạn cung cấp
   const banners = [
     {
       image: "https://cdn.shopvnb.com/img/1920x640/uploads/slider/1000z-launch-website-banner_1695177885.webp",
@@ -74,11 +73,10 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      {/* PHẦN BANNER SLIDER MỚI */}
       <div className="home-hero-slider">
         <Swiper
           modules={[Navigation, Pagination, Autoplay, EffectFade]}
-          effect={'fade'} // Hiệu ứng mờ dần sang chảnh
+          effect={'fade'} 
           spaceBetween={0}
           slidesPerView={1}
           navigation

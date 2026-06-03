@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require("../db");
 
 
-// ===== GET ALL CATEGORIES =====
+
 router.get("/", (req, res) => {
   const sql = "SELECT * FROM categories ORDER BY id DESC";
 
@@ -18,7 +18,7 @@ router.get("/", (req, res) => {
 });
 
 
-// ===== ADD CATEGORY =====
+
 router.post("/add", (req, res) => {
   const { name } = req.body;
 
@@ -29,7 +29,7 @@ router.post("/add", (req, res) => {
     });
   }
 
-  // 👉 fix lỗi bạn viết sai: replace (không phải reqlace)
+
   const slug = name
     .toLowerCase()
     .trim()
@@ -54,8 +54,6 @@ router.post("/add", (req, res) => {
   });
 });
 
-
-// ===== UPDATE CATEGORY =====
 router.put("/update/:id", (req, res) => {
   const id = req.params.id;
   const { name } = req.body;
@@ -88,7 +86,7 @@ router.put("/update/:id", (req, res) => {
 });
 
 
-// ===== DELETE CATEGORY =====
+
 router.delete("/delete/:id", (req, res) => {
   const id = req.params.id;
 

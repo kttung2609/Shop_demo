@@ -1,19 +1,15 @@
 import React from 'react'
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
 import App from './App.jsx'
-import {BrowserRouter} from "react-router-dom"
-import ShopContextProvider from "./Context/ShopContext";
+import { BrowserRouter } from "react-router-dom"
+import AdminContextProvider from "./Context/AdminContext.jsx"; // Dùng bản Admin này
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ShopContextProvider>
+    <AdminContextProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>
-    </ShopContextProvider>
-    
+    </AdminContextProvider>
   </React.StrictMode>,
 )
-// export default main;

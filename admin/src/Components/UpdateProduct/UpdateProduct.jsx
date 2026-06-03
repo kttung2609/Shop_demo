@@ -29,9 +29,16 @@ const UpdateProduct = () => {
     old_price: "",
     new_price: "",
     quantity: "",
+    description: "",
+    weight: "",
+    max_tension: "",
+    balance_point: "",
+    brand: "",
+    stiffness: "",
+    material: "",
   });
+  const [brands, setBrands] = useState([]);
 
-  // ===== LOAD PRODUCT DATA =====
   useEffect(() => {
     fetch(`http://localhost:4000/products/${id}`)
       .then(res => res.json())
@@ -43,11 +50,26 @@ const UpdateProduct = () => {
             old_price: product.old_price,
             new_price: product.new_price,
             quantity: product.quantity,
+            description: product.description || "",
+            weight: product.weight || "",
+            max_tension: product.max_tension || product.tension || "",
+            balance_point: product.balance_point || "",
+            brand: product.brand_id || "",
+            stiffness: product.stiffness || "",
+            material: product.material || "",
           });
-          // Lưu danh sách ảnh cũ từ server
           setOldImages(product.images || []);
         }
       });
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch('http://localhost:4000/api/brands');
+        const json = await res.json();
+        if (Array.isArray(json)) setBrands(json);
+        else if (json.success && json.data) setBrands(json.data);
+      } catch (err) { console.error('Failed to fetch brands', err); }
+    };
+    fetchBrands();
   }, [id]);
 
   const imageHandler = (e) => {
@@ -73,6 +95,13 @@ const UpdateProduct = () => {
     formData.append("old_price", productDetails.old_price);
     formData.append("new_price", productDetails.new_price);
     formData.append("quantity", productDetails.quantity);
+    formData.append("description", productDetails.description);
+    formData.append("weight", productDetails.weight);
+    formData.append("max_tension", productDetails.max_tension);
+    formData.append("balance_point", productDetails.balance_point);
+    formData.append("brand_id", productDetails.brand);
+    formData.append("stiffness", productDetails.stiffness);
+    formData.append("material", productDetails.material);
     formData.append("oldImages", JSON.stringify(oldImages));
 
     if (images.length > 0) {
@@ -104,7 +133,6 @@ const UpdateProduct = () => {
   return (
     <div className="update-product-container">
       <div className="update-product-card">
-        {/* Header */}
         <div className="update-product-header">
           <Edit size={32} className="header-icon" />
           <div>
@@ -114,7 +142,6 @@ const UpdateProduct = () => {
         </div>
 
         <div className="update-product-form">
-          {/* Tên sản phẩm */}
           <div className="form-item full-width">
             <label><Tag size={18} /> Tên sản phẩm *</label>
             <input
@@ -126,7 +153,73 @@ const UpdateProduct = () => {
             />
           </div>
 
-          {/* Grid thông tin */}
+          <div className="form-item full-width">
+            <label><Edit size={18} /> Mô tả sản phẩm</label>
+            <textarea
+              name="description"
+              value={productDetails.description}
+              onChange={changeHandler}
+              placeholder="Nhập mô tả ngắn gọn về sản phẩm..."
+            />
+          </div>
+
+          <div className="form-grid-3">
+            <div className="form-item">
+              <label><Package size={17} /> Trọng lượng</label>
+              <input
+                type="text"
+                name="weight"
+                value={productDetails.weight}
+                onChange={changeHandler}
+                placeholder="Ví dụ: 4U (83g)"
+              />
+            </div>
+            <div className="form-item">
+              <label><Package size={17} /> Mức căng</label>
+              <input
+                type="text"
+                name="max_tension"
+                value={productDetails.max_tension}
+                onChange={changeHandler}
+                placeholder="Ví dụ: 11-12.5kg"
+              />
+            </div>
+            <div className="form-item">
+              <label><Package size={17} /> Balance point</label>
+              <input
+                type="text"
+                name="balance_point"
+                value={productDetails.balance_point}
+                onChange={changeHandler}
+                placeholder="Ví dụ: 310mm"
+              />
+            </div>
+          </div>
+
+          <div className="form-grid-3">
+            <div className="form-item">
+              <label><Package size={17} /> Stiffness</label>
+              <input
+                type="text"
+                name="stiffness"
+                value={productDetails.stiffness}
+                onChange={changeHandler}
+                placeholder="Ví dụ: Medium"
+              />
+            </div>
+            <div className="form-item">
+              <label><Package size={17} /> Chất liệu</label>
+              <input
+                type="text"
+                name="material"
+                value={productDetails.material}
+                onChange={changeHandler}
+                placeholder="Ví dụ: Graphite"
+              />
+            </div>
+          </div>
+
+
           <div className="form-grid-4">
             <div className="form-item">
               <label><DollarSign size={17} /> Giá gốc</label>
@@ -153,9 +246,17 @@ const UpdateProduct = () => {
                 <option value="8">Dây cước</option>
               </select>
             </div>
+            <div className="form-item">
+              <label><Tag size={17} /> Thương hiệu</label>
+              <select name="brand" value={productDetails.brand} onChange={changeHandler}>
+                <option value="">Chọn thương hiệu</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* Quản lý ảnh hiện tại */}
           <div className="form-item full-width">
             <label><ImageIcon size={18} /> Ảnh hiện tại trên hệ thống</label>
             <div className="image-manager-wrapper">
@@ -172,7 +273,6 @@ const UpdateProduct = () => {
             </div>
           </div>
 
-          {/* Upload ảnh mới */}
           <div className="form-item full-width">
             <label><Plus size={18} /> Tải lên ảnh mới (Thay thế toàn bộ ảnh cũ)</label>
             <div className="image-manager-wrapper new-uploads">
@@ -191,7 +291,6 @@ const UpdateProduct = () => {
             </div>
           </div>
 
-          {/* Footer Actions */}
           <div className="form-actions">
             <button onClick={() => navigate("/listproduct")} className="btn-back">
               <ArrowLeft size={18} /> QUAY LẠI

@@ -116,7 +116,6 @@ const Users = () => {
 
   return (
     <div className="admin-users-page">
-      {/* HEADER: Kéo dãn 100% */}
       <div className="users-top-bar">
         <div className="title-area">
           <h1>Quản lý thành viên</h1>
@@ -127,7 +126,6 @@ const Users = () => {
         </button>
       </div>
 
-      {/* TABLE WRAPPER: Kéo dãn 100% */}
       <div className="users-table-container">
         <table className="users-modern-table">
           <thead>
@@ -176,7 +174,6 @@ const Users = () => {
         </table>
       </div>
 
-      {/* MODAL DIALOG */}
       {showDialog && (
         <div className="users-modal-overlay">
           <div className="users-modal-card">

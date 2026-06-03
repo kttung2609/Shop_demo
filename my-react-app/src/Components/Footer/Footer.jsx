@@ -15,7 +15,6 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-top">
         <div className="footer-container">
-          {/* Cột 1: Giới thiệu */}
           <div className="footer-col">
             <h3 className="footer-logo">BADMINTON<span>SHOP</span></h3>
             <p className="footer-desc">
@@ -28,8 +27,6 @@ const Footer = () => {
               <a href="#"><FaYoutube /></a>
             </div>
           </div>
-
-          {/* Cột 2: Danh mục */}
           <div className="footer-col">
             <h4>DANH MỤC</h4>
             <ul>
@@ -39,8 +36,6 @@ const Footer = () => {
               <li><a href="#">Phụ Kiện</a></li>
             </ul>
           </div>
-
-          {/* Cột 3: Hỗ trợ */}
           <div className="footer-col">
             <h4>HỖ TRỢ KHÁCH HÀNG</h4>
             <ul>
@@ -49,8 +44,6 @@ const Footer = () => {
               <li><a href="#">Vận chuyển & Giao nhận</a></li>
             </ul>
           </div>
-
-          {/* Cột 4: Liên hệ */}
           <div className="footer-col">
             <h4>LIÊN HỆ</h4>
             <div className="contact-info">

@@ -33,12 +33,9 @@ const Product = () => {
 
   }, [id])
 
-  // ===== LOADING =====
   if (loading) {
     return <div>Loading...</div>
   }
-
-  // ===== KHÔNG TÌM THẤY =====
   if (!product) {
     return <div>Không tìm thấy sản phẩm</div>
   }

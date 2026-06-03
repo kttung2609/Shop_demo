@@ -7,6 +7,9 @@ const orderRoutes = require("./routes/orders");
 const cartRoutes = require("./routes/carts")
 const productRoutes = require('./routes/products');
 const statsRoutes = require('./routes/stats');
+const reviewRoute = require("./routes/reviews");
+const chatRoutes = require("./routes/chat");
+const brandRoutes = require("./routes/brands");
 const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
@@ -14,12 +17,11 @@ const cookieParser = require("cookie-parser");
 
 
 const app = express();
-app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"],
-  credentials: true
-}));
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174"], 
+  credentials: true 
+}));
 app.use(bodyParser.json());
 // app.use("/api/login", loginRouter);
 app.use("/orders", orderRoutes);
@@ -31,6 +33,9 @@ app.use('/uploads', express.static('uploads'));
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/stats", statsRoutes);
+app.use("/api/reviews", reviewRoute);
+app.use("/api/chat", chatRoutes);
+app.use("/api/brands", brandRoutes);
 app.get("/api/images", (req, res) => {
   const folderPath = path.join(__dirname, "uploads");
 

@@ -16,6 +16,7 @@ const Popular = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const category = queryParams.get("category");
+  const query = queryParams.get("q") || "";
 
   const brands = [
     { id: "all", name: "Tất cả thương hiệu" },
@@ -31,6 +32,7 @@ const Popular = () => {
     let url = `http://localhost:4000/products?page=${currentPage}&limit=${itemsPerPage}`;
     if (category) url += `&category=${category}`;
     if (brand !== "all") url += `&brand=${brand}`;
+    if (query) url += `&q=${encodeURIComponent(query)}`;
     if (sort) url += `&sort=${sort}`;
 
     fetch(url)
@@ -43,12 +45,11 @@ const Popular = () => {
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { setCurrentPage(1); }, [category, brand, sort]);
-  useEffect(() => { fetchProducts(); }, [currentPage, category, brand, sort]);
+  useEffect(() => { setCurrentPage(1); }, [category, brand, sort, query]);
+  useEffect(() => { fetchProducts(); }, [currentPage, category, brand, sort, query]);
 
   return (
     <div className="shop-page">
-      {/* BREADCRUMB */}
       <div className="breadcrumb-area">
         <div className="container-custom">
           <span>Trang chủ</span> <ChevronRight size={14} />
@@ -57,7 +58,6 @@ const Popular = () => {
       </div>
 
       <div className="container-custom shop-layout">
-        {/* SIDEBAR - GIỐNG HVSHOP */}
         <aside className="shop-sidebar">
           <div className="sidebar-widget">
             <h3 className="widget-title">DANH MỤC SẢN PHẨM</h3>
@@ -91,12 +91,10 @@ const Popular = () => {
             <img src="https://hvshop.vn/wp-content/uploads/2023/04/banner-sidebar.jpg" alt="Ads" />
           </div>
         </aside>
-
-        {/* MAIN CONTENT */}
         <main className="shop-main">
           <div className="shop-intro">
-            <h1>{category === "2" ? "Giày Cầu Lông Chính Hãng" : "Sản Phẩm Cầu Lông"}</h1>
-            <p>Tổng hợp các mẫu giày cầu lông mới nhất từ các thương hiệu hàng đầu, hỗ trợ di chuyển linh hoạt và bảo vệ đôi chân của bạn.</p>
+            <h1>{query ? `Kết quả tìm kiếm cho "${query}"` : category === "2" ? "Giày Cầu Lông Chính Hãng" : "Sản Phẩm Cầu Lông"}</h1>
+            <p>{query ? `Hiển thị sản phẩm chứa "${query}"${category ? ` trong danh mục ${category === "1" ? "Vợt" : category === "2" ? "Giày" : category === "3" ? "Áo" : category === "5" ? "Phụ kiện" : ""}` : ""}.` : "Tổng hợp các mẫu giày cầu lông mới nhất từ các thương hiệu hàng đầu, hỗ trợ di chuyển linh hoạt và bảo vệ đôi chân của bạn."}</p>
           </div>
 
           <div className="shop-filter-bar">
@@ -123,8 +121,6 @@ const Popular = () => {
               ))}
             </div>
           )}
-
-          {/* PAGINATION */}
           {totalPages > 1 && (
             <div className="pagination-custom">
               <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>«</button>

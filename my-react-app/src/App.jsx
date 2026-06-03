@@ -1,6 +1,9 @@
 import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Navbar } from './Components/Navbar/Navbar'
+import { ChatBot } from './Components/ChatBot/ChatBot'
 
 import Main_page from './Pages/Main_page'
 import Product from './Pages/Product'
@@ -12,6 +15,7 @@ import ShopCategory from './Pages/ShopCategory/ShopCategory'
 import Orders from "./Components/Orders/Orders";
 import Popular from "./Components/Popular/Popular";
 import products from "./Pages/Product";
+import review from "./Components/ReviewModal/ReviewModal";
 import { useEffect } from "react";
 
 
@@ -27,9 +31,20 @@ function App() {
     }
   }, []);
   return (
-    <BrowserRouter> 
-
+    <BrowserRouter>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <Navbar />
+      <ChatBot />
 
       <Routes>
       
@@ -55,7 +70,7 @@ function App() {
         <Route path="/profile" element={<Profile />}/>
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/orders" element={<Orders />} />
-
+        <Route path="/review" element={<Orders />} />
       </Routes>
 
     </BrowserRouter>

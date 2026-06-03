@@ -2,13 +2,26 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
+const modifyDailyStatistics = (statDate, revenueDelta, ordersDelta, productsDelta, callback) => {
+  const sql = `
+    INSERT INTO daily_statistics
+      (stat_date, total_revenue, total_orders, new_users, products_sold)
+    VALUES (?, ?, ?, 0, ?)
+    ON DUPLICATE KEY UPDATE
+      total_revenue = total_revenue + VALUES(total_revenue),
+      total_orders = total_orders + VALUES(total_orders),
+      products_sold = products_sold + VALUES(products_sold)
+  `;
 
-// ===== TẠO ĐƠN HÀNG =====
+  db.query(sql, [statDate, revenueDelta, ordersDelta, productsDelta], callback);
+};
+
+
+
 router.post("/add", (req, res) => {
 
-  const { user_id, items, name, phone, email, address } = req.body;
+  const { user_id, items, name, phone, email, address, note, status = 'pending' } = req.body;
 
-  // ❗ validate
   if (!items || items.length === 0) {
     return res.json({ success: false, message: "Giỏ hàng trống" });
   }
@@ -17,7 +30,6 @@ router.post("/add", (req, res) => {
     return res.json({ success: false, message: "Thiếu thông tin khách hàng" });
   }
 
-  // 🔥 tính total backend
   const total = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -25,13 +37,13 @@ router.post("/add", (req, res) => {
 
   const orderSql = `
     INSERT INTO orders 
-    (user_id, total, status, name, phone, email, address)
-    VALUES (?, ?, 'pending', ?, ?, ?, ?)
+    (user_id, total, status, name, phone, email, address, note)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
     orderSql,
-    [user_id, total, name, phone, email, address],
+    [user_id, total, status, name, phone, email, address, note || null],
     (err, result) => {
 
       if (err) {
@@ -41,7 +53,6 @@ router.post("/add", (req, res) => {
 
       const orderId = result.insertId;
 
-      // 🔥 insert order_items (KHÔNG có category)
       const itemSql = `
         INSERT INTO order_items 
         (order_id, product_id, name, image, price, quantity)
@@ -50,7 +61,7 @@ router.post("/add", (req, res) => {
       
       const values = items.map(item => [
         orderId,
-        item.product_id,   // ❗ chỉ dùng 1 key
+        item.product_id, 
         item.name,
         item.image,
         item.price,
@@ -63,10 +74,19 @@ router.post("/add", (req, res) => {
           return res.json({ success: false, message: err2.message });
         }
 
-        res.json({
-          success: true,
-          message: "Đặt hàng thành công",
-          order_id: orderId
+        const totalProducts = items.reduce((sum, item) => sum + item.quantity, 0);
+        const statDate = new Date().toISOString().split("T")[0];
+
+        modifyDailyStatistics(statDate, total, 1, totalProducts, (statErr) => {
+          if (statErr) {
+            console.log("DAILY STAT ERROR:", statErr);
+          }
+
+          res.json({
+            success: true,
+            message: "Đặt hàng thành công",
+            order_id: orderId
+          });
         });
 
       });
@@ -76,7 +96,6 @@ router.post("/add", (req, res) => {
 });
 
 
-// ===== LẤY DANH SÁCH ORDER (CÓ CATEGORY) =====
 router.get("/", (req, res) => {
 
   const sql = `
@@ -154,7 +173,6 @@ router.get("/", (req, res) => {
 });
 
 
-// ===== UPDATE STATUS =====
 router.put("/update/:id", (req, res) => {
 
   const { status } = req.body;
@@ -174,7 +192,6 @@ router.put("/update/:id", (req, res) => {
 });
 
 
-// ===== HUỶ ĐƠN =====
 router.put("/cancel/:id", (req, res) => {
 
   const { note } = req.body;
@@ -183,16 +200,54 @@ router.put("/cancel/:id", (req, res) => {
     return res.json({ success: false, message: "Thiếu lý do huỷ" });
   }
 
+  const orderId = req.params.id;
+
   db.query(
-    "UPDATE orders SET status='cancelled', note=? WHERE id=?",
-    [note, req.params.id],
-    (err) => {
+    "SELECT total, DATE(created_at) as stat_date FROM orders WHERE id = ?",
+    [orderId],
+    (err, orderResults) => {
       if (err) {
         console.log(err);
         return res.json({ success: false });
       }
-      res.json({ success: true });
-      
+
+      if (!orderResults.length) {
+        return res.json({ success: false, message: "Không tìm thấy đơn hàng" });
+      }
+
+      const orderTotal = Number(orderResults[0].total) || 0;
+      const statDate = orderResults[0].stat_date;
+
+      db.query(
+        "SELECT SUM(quantity) as products_sold FROM order_items WHERE order_id = ?",
+        [orderId],
+        (itemErr, itemResults) => {
+          if (itemErr) {
+            console.log(itemErr);
+            return res.json({ success: false });
+          }
+
+          const productsSold = Number(itemResults[0]?.products_sold || 0);
+
+          modifyDailyStatistics(statDate, -orderTotal, -1, -productsSold, (statErr) => {
+            if (statErr) {
+              console.log("DAILY STAT ERROR:", statErr);
+            }
+
+            db.query(
+              "UPDATE orders SET status='cancelled', note=? WHERE id=?",
+              [note, orderId],
+              (updateErr) => {
+                if (updateErr) {
+                  console.log(updateErr);
+                  return res.json({ success: false });
+                }
+                res.json({ success: true });
+              }
+            );
+          });
+        }
+      );
     }
   );
 

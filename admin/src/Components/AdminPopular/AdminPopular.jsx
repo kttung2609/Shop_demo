@@ -18,13 +18,16 @@ const Popular = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([])
+  const [searchFocused, setSearchFocused] = useState(false)
 
-  const itemsPerPage = 15; // 5 cột x 3 hàng = 15 là con số hoàn hảo
+  const itemsPerPage = 15; 
   const location = useLocation()
   const navigate = useNavigate()
 
   const queryParams = new URLSearchParams(location.search)
   const category = queryParams.get("category")
+  const q = queryParams.get("q") || ""
 
   const categories = [
     { id: 1, name: "Vợt cầu lông" },
@@ -42,6 +45,7 @@ const Popular = () => {
       setLoading(true)
       let url = `http://localhost:4000/products?page=${currentPage}&limit=${itemsPerPage}`
       if (category) url += `&category=${category}`
+      if (q) url += `&q=${encodeURIComponent(q)}`
       const res = await fetch(url)
       const data = await res.json()
       setProducts(data.data || [])
@@ -50,6 +54,23 @@ const Popular = () => {
       console.log("Fetch lỗi:", err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchSuggestions = async (query) => {
+    if (!query.trim()) {
+      setSuggestions([])
+      return
+    }
+
+    try {
+      const url = `http://localhost:4000/products?page=1&limit=5&q=${encodeURIComponent(query)}${category ? `&category=${category}` : ''}`
+      const res = await fetch(url)
+      const data = await res.json()
+      setSuggestions(data.data || [])
+    } catch (err) {
+      console.log("Suggestion lỗi:", err)
+      setSuggestions([])
     }
   }
 
@@ -67,14 +88,37 @@ const Popular = () => {
   }
 
   const handleSearch = () => {
-    if (search.trim() !== "") {
-      navigate(`/search?q=${search}`);
+    const trimmed = search.trim()
+    if (trimmed !== "") {
+      setSearchFocused(false)
+      navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    } else {
+      navigate(`/listproduct`);
     }
   };
 
+  const handleSuggestionClick = (term) => {
+    setSearch(term)
+    setSuggestions([])
+    setSearchFocused(false)
+    navigate(`/search?q=${encodeURIComponent(term)}`)
+  }
+
+  useEffect(() => {
+    setSearch(q)
+  }, [q])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSuggestions(search)
+    }, 250)
+
+    return () => clearTimeout(timer)
+  }, [search, category])
+
   useEffect(() => {
     fetchProducts()
-  }, [currentPage, category, location.key])
+  }, [currentPage, category, q, location.pathname])
 
   return (
     <div className='admin-list-page'>
@@ -97,7 +141,6 @@ const Popular = () => {
       </div>
 
       <div className="admin-main-layout">
-        {/* 2. SIDEBAR FILTER */}
         <aside className="admin-list-sidebar">
           <div className="sidebar-filter-card">
             <h3 className="sidebar-filter-title"><Filter size={18} /> BỘ LỌC</h3>
@@ -128,24 +171,38 @@ const Popular = () => {
           </div>
         </aside>
 
-        {/* 3. PRODUCT CONTENT */}
         <div className="admin-list-content">
-          {/* SEARCH BAR */}
           <div className="admin-search-container">
             <div className="search-input-wrapper">
               <Search className="search-icon" size={20} />
-              <input 
-                type="text" 
-                placeholder="Tìm kiếm sản phẩm nhanh..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
+              <div className="search-box">
+                <input 
+                  type="text" 
+                  placeholder="Tìm kiếm sản phẩm nhanh..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+                />
+                {searchFocused && suggestions.length > 0 && (
+                  <ul className="search-suggestion-list">
+                    {suggestions.map((item) => (
+                      <li
+                        key={item.id}
+                        className="search-suggestion-item"
+                        onMouseDown={() => handleSuggestionClick(item.name)}
+                      >
+                        {item.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <button onClick={handleSearch}>TÌM</button>
             </div>
           </div>
 
-          {/* PRODUCT GRID - HIỂN THỊ 5 CỘT */}
           {loading ? (
             <div className="admin-loading-state">Đang tải dữ liệu...</div>
           ) : (
@@ -173,7 +230,6 @@ const Popular = () => {
                 )}
               </div>
 
-              {/* PAGINATION */}
               {totalPages > 1 && (
                 <div className="admin-pagination-footer">
                   <button 

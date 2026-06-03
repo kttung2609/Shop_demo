@@ -5,132 +5,105 @@ const jwt = require("jsonwebtoken");
 
 const SECRET = "SECRET_KEY";
 
-//
-// ================= SIGNUP =================
-//
-router.post("/signup", (req, res) => {
-  const { name, email, password } = req.body;
+router.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  db.query("SELECT * FROM users WHERE email=?", [email], (err, results) => {
+    if (err || results.length === 0) return res.json({ success: false, message: "Email không tồn tại" });
+    const user = results[0];
+    if (password !== user.password) return res.json({ success: false, message: "Sai mật khẩu" });
 
-  const sql = `
-    INSERT INTO users (name, email, password, role)
-    VALUES (?, ?, ?, 'user')
-  `;
+    const token = jwt.sign({ id: user.id, role: user.role }, SECRET, { expiresIn: "7d" });
+    const cookieName = user.role === "admin" ? "admin_token" : "token";
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction ? true : false,
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    };
 
-  db.query(sql, [name, email, password], (err) => {
-    if (err) {
-      return res.json({ success: false, message: "Email đã tồn tại" });
-    }
-    res.json({ success: true });
+    res.cookie(cookieName, token, cookieOptions);
+    res.json({ success: true, role: user.role });
   });
 });
 
-//
-// ================= LOGIN =================
-//
-router.post("/login", (req, res) => {
-  const { email, password } = req.body;
-
-  db.query(
-    "SELECT * FROM users WHERE email=?",
-    [email],
-    (err, results) => {
-      if (err || results.length === 0) {
-        return res.json({ success: false, message: "Sai email" });
-      }
-
-      const user = results[0];
-
-      // 👉 SO SÁNH TRỰC TIẾP
-      if (password !== user.password) {
-        return res.json({ success: false, message: "Sai mật khẩu" });
-      }
-
-      const token = jwt.sign(
-        { id: user.id, role: user.role },
-        SECRET,
-        { expiresIn: "7d" }
-      );
-
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-      });
-
-      res.json({
-        success: true,
-        role: user.role,
-      });
-    }
-  );
-});
-
-//
-// ================= LOGOUT =================
-//
-router.post("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.json({ success: true });
-});
-
-//
-// ================= GET CURRENT USER =================
-//
 router.get("/me", (req, res) => {
-  const token = req.cookies?.token;
-
+  const role = req.query.role;
+  const token = role === "admin" ? req.cookies?.admin_token : req.cookies?.token;
   if (!token) return res.status(401).json(null);
-
   jwt.verify(token, SECRET, (err, decoded) => {
-    if (err) return res.status(403).json(null);
-
-    // Lấy thêm name và avatar từ DB
+    if (err || decoded.role !== role) return res.status(403).json(null);
     db.query("SELECT id, name, email, role, avatar FROM users WHERE id = ?", [decoded.id], (err, results) => {
-      if (err || results.length === 0) return res.status(404).json(null);
-      
-      const user = results[0];
-      res.json(user); // Trả về đầy đủ thông tin
+      res.json(results[0]);
     });
   });
 });
 
+router.get("/me/user", (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json(null);
+  jwt.verify(token, SECRET, (err, decoded) => {
+    if (err || decoded.role !== "user") return res.status(403).json(null);
+    db.query("SELECT id, name, email, role, avatar FROM users WHERE id = ?", [decoded.id], (err, results) => {
+      res.json(results[0]);
+    });
+  });
+});
 
-//
-// ================= MIDDLEWARE =================
-//
+router.get("/me/admin", (req, res) => {
+  const token = req.cookies?.admin_token;
+  if (!token) return res.status(401).json(null);
+  jwt.verify(token, SECRET, (err, decoded) => {
+    if (err || decoded.role !== "admin") return res.status(403).json(null);
+    db.query("SELECT id, name, email, role, avatar FROM users WHERE id = ?", [decoded.id], (err, results) => {
+      res.json(results[0]);
+    });
+  });
+});
 
-// 👉 user đăng nhập là được
+const isProduction = process.env.NODE_ENV === "production";
+const clearCookieOptions = {
+  path: "/",
+  httpOnly: true,
+  secure: isProduction ? true : false,
+  sameSite: isProduction ? "none" : "lax",
+};
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", clearCookieOptions);
+  res.clearCookie("admin_token", clearCookieOptions);
+  res.json({ success: true });
+});
+router.post("/logout/user", (req, res) => {
+  res.clearCookie("token", clearCookieOptions);
+  res.json({ success: true });
+});
+router.post("/logout/admin", (req, res) => {
+  res.clearCookie("admin_token", clearCookieOptions);
+  res.json({ success: true });
+});
+
 const verifyUser = (req, res, next) => {
   const token = req.cookies?.token;
-
-  if (!token) return res.status(401).json({ message: "No token" });
-
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
   jwt.verify(token, SECRET, (err, decoded) => {
-    if (err) return res.status(403).json({ message: "Invalid token" });
-
+    if (err || decoded.role !== "user") return res.status(403).json({ message: "Forbidden" });
     req.user = decoded;
     next();
   });
 };
 
-// 👉 chỉ admin
 const verifyAdmin = (req, res, next) => {
-  const token = req.cookies?.token;
-
-  if (!token) return res.status(401).json({ message: "No token" });
-
+  const token = req.cookies?.admin_token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
   jwt.verify(token, SECRET, (err, decoded) => {
-    if (err || decoded.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
+    if (err || decoded.role !== "admin") return res.status(403).json({ message: "Forbidden" });
     req.user = decoded;
     next();
   });
 };
 
-//
-// ================= EXPORT =================
-//
 module.exports = router;
 module.exports.verifyUser = verifyUser;
 module.exports.verifyAdmin = verifyAdmin;
