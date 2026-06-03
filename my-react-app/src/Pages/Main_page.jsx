@@ -8,8 +8,6 @@ const Main_page = () => {
     <div>Main_page
 
       <Home/>
-      {/* <Popular/> */}
-      {/* <NewCollection/> */}
       
     </div>
   )

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import navlogo from "../../assets/nav-logo.svg";
 import { LogOut, User as UserIcon, Settings, ExternalLink, ChevronDown } from "lucide-react";
@@ -6,28 +7,53 @@ import { LogOut, User as UserIcon, Settings, ExternalLink, ChevronDown } from "l
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const navigate = useNavigate();
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch("http://localhost:4000/auth/me?role=admin", { credentials: "include" });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (data && data.role === "admin") {
+        setUser(data);
+        localStorage.setItem("user", JSON.stringify(data));
+      } else {
+        setUser(null);
+        localStorage.removeItem("user");
+        navigate("/login");
+      }
+    } catch (err) {
+      setUser(null);
+      localStorage.removeItem("user");
+    }
+  };
 
   useEffect(() => {
-    fetch("http://localhost:4000/auth/me?role=admin", { credentials: "include" })
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.role === "admin") {
-          setUser(data);
-          localStorage.setItem("user", JSON.stringify(data));
-        } else {
-          window.location.href = "http://localhost:5174/login";
-        }
-      })
-      .catch(() => {
-        setUser(null);
-      });
-  }, []);
+    checkAuth();
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        checkAuth();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [navigate]);
 
   const logout = async () => {
-    await fetch("http://localhost:4000/auth/logout", { method: "POST", credentials: "include" });
+    try {
+      await fetch("http://localhost:4000/auth/logout/admin", { 
+        method: "POST", 
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate"
+        }
+      });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+    localStorage.removeItem("user");
+    setUser(null);
+    // Hard reload to clear any cached auth state
     window.location.href = "/login";
   };
 

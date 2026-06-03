@@ -304,6 +304,115 @@
     transform: scale(1.02);
 }
 
+.admin-btn-cart:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+    color: #999;
+    border-color: #ddd;
+}
+
 .admin-btn-cart:active {
     transform: scale(0.98);
+}
+.admin-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.admin-review-item {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 20px;
+}
+
+.rev-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.rev-user-info img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.rev-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.rev-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: #999;
+}
+
+.rev-comment {
+  font-size: 14px;
+  color: #444;
+  margin-left: 52px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* Phần phản hồi */
+.admin-reply-box {
+  margin-left: 52px;
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  color: #ff4d4f;
+  background: #fff1f0;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.admin-reply-box p {
+  color: #333;
+  margin: 2px 0 0 0;
+  font-size: 13.5px;
+}
+
+.admin-reply-input {
+  margin-left: 52px;
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-reply-input input {
+  flex: 1;
+  border: 1px solid #ddd;
+  padding: 8px 15px;
+  border-radius: 20px;
+  outline: none;
+  font-size: 13px;
+}
+
+.admin-reply-input input:focus {
+  border-color: #ff4d4f;
+}
+
+.admin-reply-input button {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-review {
+  text-align: center;
+  color: #999;
+  padding: 30px;
 }

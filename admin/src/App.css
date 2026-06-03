@@ -2,7 +2,9 @@
   --primary-color: #ff4d4f;
   --bg-admin: #f4f7f6;
 }
-
+*{
+  font-family: "Roboto";
+}
 .admin-app {
   display: flex;
   flex-direction: column;

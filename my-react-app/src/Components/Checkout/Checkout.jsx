@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import { ShopContext } from "../../Context/ShopContext";
+import { toast } from "react-toastify";
 import "./Checkout.css";
 import { 
   User, 
@@ -9,12 +10,14 @@ import {
   FileText, 
   CreditCard, 
   Truck,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 
 const Checkout = () => {
-  const { cartItems, getTotalCartAmount } = useContext(ShopContext);
+  const { cartItems, getTotalCartAmount, clearCart } = useContext(ShopContext);
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -29,28 +32,41 @@ const Checkout = () => {
   };
 
   const handleOrder = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    
-    // Đồng bộ cách lấy ảnh khi gửi lên server để lưu vào bảng order_items
-    const items = cartItems.map(item => {
-      let imageSrc = "default.jpg";
-      try {
-        const parsedImgs = typeof item.images === 'string' ? JSON.parse(item.images) : item.images;
-        if (parsedImgs && parsedImgs.length > 0) imageSrc = parsedImgs[0];
-      } catch (e) {
-        imageSrc = item.image || "default.jpg";
-      }
+    if (isLoading) return;
 
-      return {
-        product_id: item.productID,
-        name: item.name,
-        image: imageSrc, // Gửi ảnh đã xử lý
-        price: item.new_price,
-        quantity: item.quantity,
-      };
-    });
+    if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) {
+      toast.warning("❌ Vui lòng điền đầy đủ thông tin bắt buộc (Tên, SĐT, Địa chỉ)");
+      return;
+    }
 
-      try {
+    if (cartItems.length === 0) {
+      toast.error("❌ Giỏ hàng trống, không thể tạo đơn hàng");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      
+      const items = cartItems.map(item => {
+        let imageSrc = "default.jpg";
+        try {
+          const parsedImgs = typeof item.images === 'string' ? JSON.parse(item.images) : item.images;
+          if (parsedImgs && parsedImgs.length > 0) imageSrc = parsedImgs[0];
+        } catch (e) {
+          imageSrc = item.image || "default.jpg";
+        }
+
+        return {
+          product_id: item.productID,
+          name: item.name,
+          image: imageSrc, 
+          price: item.new_price,
+          quantity: item.quantity,
+        };
+      });
+
       const res = await fetch("http://localhost:4000/orders/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,22 +85,24 @@ const Checkout = () => {
       const data = await res.json();
 
       if (data.success) {
-        // 🔥 BƯỚC QUAN TRỌNG: Gọi API xóa sạch giỏ hàng trong Database
-        await fetch("http://localhost:4000/api/cart/clear", {
-          method: "DELETE",
-          credentials: "include" // Để server biết xóa giỏ hàng của ai dựa trên Token
-        });
-
-        alert("✅ Đặt hàng thành công!");
+        toast.success("✅ Đặt hàng thành công!");
         
-        // Chuyển hướng người dùng về trang đơn hàng
-        // Sử dụng window.location.href sẽ làm mới toàn bộ App và đưa giỏ hàng về 0
-        window.location.href = "/orders"; 
+        const cleared = await clearCart();
+        if (!cleared) {
+          console.warn("Không xóa được giỏ hàng sau khi đặt hàng");
+        }
+
+        setTimeout(() => {
+          window.location.href = "/orders";
+        }, 800);
       } else {
-        alert(data.message || "❌ Đặt hàng thất bại!");
+        toast.error(data.message || "❌ Đặt hàng thất bại!");
+        setIsLoading(false);
       }
     } catch (err) {
-      alert("Lỗi kết nối server!");
+      console.error("Lỗi đặt hàng:", err);
+      toast.error("Lỗi kết nối server!");
+      setIsLoading(false);
     }
   };
 
@@ -176,13 +194,12 @@ const Checkout = () => {
               
               <div className="checkout-items-list">
                 {cartItems.map((item, index) => {
-                  // LOGIC XỬ LÝ ẢNH GIỐNG CARTITEMS.JSX
                   let imageSrc = "default.jpg";
                   try {
                     const parsedImgs = typeof item.images === 'string' ? JSON.parse(item.images) : item.images;
                     if (parsedImgs && parsedImgs.length > 0) imageSrc = parsedImgs[0];
                   } catch (e) {
-                    imageSrc = item.image || "default.jpg"; // Fallback nếu có field image đơn
+                    imageSrc = item.image || "default.jpg"; 
                   }
 
                   return (
@@ -222,9 +239,16 @@ const Checkout = () => {
               <button
                 className="btn-place-order"
                 onClick={handleOrder}
-                disabled={cartItems.length === 0}
+                disabled={cartItems.length === 0 || isLoading}
               >
-                ĐẶT HÀNG NGAY
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    ĐANG XỬ LÝ...
+                  </>
+                ) : (
+                  "ĐẶT HÀNG NGAY"
+                )}
               </button>
             </div>
           </aside>

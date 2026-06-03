@@ -1,5 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import AdminLogin from "./Components/AdminLogin/Adminlogin";
 import ProtectedRoute from "./Components/ProtectedRoute"; // Sửa lại path nếu cần
 import Popular from './Components/AdminPopular/AdminPopular';
@@ -11,6 +13,11 @@ import AddProduct from './Components/AddProduct/AddProduct';
 import UpdateProduct from './Components/UpdateProduct/UpdateProduct';
 import AdminProductPage from './Components/ProductDisplayAdmin/ProductDisplayAdmin';
 import ProductAdmin from './Pages/ProductAdmin'; // Trang chi tiết sp admin
+import Category from "./Components/Category/Categories";
+import Brands from './Components/Brands/Brands';
+import CartItems from "./Components/CartItems/CartItems";
+import Checkout from "./Components/Checkout/Checkout";
+import AdminStats from "./Components/AdminStats/AdminStats";
 import './App.css'; // File CSS quan trọng để dàn trang
 
 function App() {
@@ -19,27 +26,38 @@ function App() {
 
   return (
     <div className="admin-app">
-      {/* 1. Chỉ hiện Navbar nếu không phải trang login */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       {!isLoginPage && <Navbar />}
 
       <div className="admin-main-content">
-        {/* 2. Chỉ hiện Sidebar nếu không phải trang login */}
         {!isLoginPage && <Sidebar />}
 
-        {/* 3. Vùng hiển thị nội dung các trang */}
         <div className={isLoginPage ? "auth-container" : "page-container"}>
           <Routes>
             <Route path="/login" element={<AdminLogin />} />
 
-            {/* Các trang bảo mật bọc trong ProtectedRoute */}
             <Route path="/listproduct" element={<ProtectedRoute><Popular /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><Popular /></ProtectedRoute>} />
             <Route path="/addproduct" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
             <Route path="/update/:id" element={<ProtectedRoute><UpdateProduct /></ProtectedRoute>} />
             <Route path="/product/:productId" element={<ProtectedRoute><ProductAdmin /></ProtectedRoute>} />
             <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-            
-            {/* Nếu vào link trống thì đá về listproduct */}
+            <Route path="/cart" element={<ProtectedRoute><CartItems /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/categories" element={<ProtectedRoute><Category /></ProtectedRoute>} />
+            <Route path="/brands" element={<ProtectedRoute><Brands /></ProtectedRoute>} />
+            <Route path="/stats" element={<ProtectedRoute><AdminStats /></ProtectedRoute>} />
             <Route path="/" element={<Navigate to="/listproduct" />} />
           </Routes>
         </div>

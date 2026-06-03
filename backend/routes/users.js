@@ -4,12 +4,10 @@ const db = require("../db");
 const multer = require("multer");
 const fs = require("fs");
 
-// ===== TẠO FOLDER =====
 if (!fs.existsSync("uploads/avatars")) {
   fs.mkdirSync("uploads/avatars", { recursive: true });
 }
 
-// ===== CONFIG UPLOAD =====
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/avatars");
@@ -21,7 +19,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// ===== GET USERS =====
 router.get("/", (req, res) => {
   db.query("SELECT * FROM users", (err, result) => {
     if (err) return res.json({ success: false });
@@ -29,7 +26,6 @@ router.get("/", (req, res) => {
   });
 });
 
-// ===== UPLOAD AVATAR =====
 router.post("/upload-avatar", upload.single("avatar"), (req, res) => {
   res.json({
     success: true,
@@ -37,7 +33,6 @@ router.post("/upload-avatar", upload.single("avatar"), (req, res) => {
   });
 });
 
-// ===== ADD USER =====
 router.post("/add", (req, res) => {
   const { name, email, password, avatar, role } = req.body;
 
@@ -62,7 +57,6 @@ router.post("/add", (req, res) => {
   });
 });
 
-// ===== UPDATE USER =====
 router.put("/update/:id", (req, res) => {
   const { name, email, avatar, role } = req.body;
   const id = req.params.id;
@@ -80,7 +74,6 @@ router.put("/update/:id", (req, res) => {
   });
 });
 
-// ===== DELETE =====
 router.delete("/delete/:id", (req, res) => {
   db.query("DELETE FROM users WHERE id=?", [req.params.id], (err) => {
     if (err) return res.json({ success: false });

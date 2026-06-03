@@ -3,6 +3,7 @@ import "./LoginSignup.css";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ShopContext } from "../Context/ShopContext";
+import { toast } from "react-toastify";
 
 const LoginSignup = () => {
   const { fetchUserData } = useContext(ShopContext);
@@ -10,15 +11,26 @@ const LoginSignup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const navigate = useNavigate();
 
+  const checkUserAuth = async () => {
+    try {
+      const res = await fetch("http://localhost:4000/auth/me?role=user", { credentials: "include" });
+      const data = await res.json();
+      if (data && data.role === "user") {
+        navigate("/");
+      }
+    } catch (err) {
+    }
+  };
+
   useEffect(() => {
-    fetch("http://localhost:4000/auth/me?role=user", { credentials: "include" })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.role === "user") {
-          navigate("/");
-        }
-      })
-      .catch(() => {});
+    checkUserAuth();
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        checkUserAuth();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
   }, [navigate]);
 
   const changeHandler = (e) => {
@@ -38,10 +50,10 @@ const LoginSignup = () => {
         await fetchUserData();
         navigate("/");
       } else {
-        alert("Tài khoản admin không thể đăng nhập trang khách hàng");
+        toast.warning("Tài khoản admin không thể đăng nhập trang khách hàng");
       }
     } else {
-      alert(data.message);
+      toast.error(data.message);
     }
   };
 
@@ -53,10 +65,10 @@ const LoginSignup = () => {
     });
     const data = await res.json();
     if (data.success) {
-      alert("Đăng ký thành công!");
+      toast.success("Đăng ký thành công!");
       setState("Login");
     } else {
-      alert(data.message);
+      toast.error(data.message);
     }
   };
 

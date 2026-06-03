@@ -8,16 +8,46 @@ const AdminLogin = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch("http://localhost:4000/auth/me?role=admin", { credentials: "include" })
-      .then(res => res.json())
-      .then(data => {
-        console.log("AdminLogin /me data:", data);
-        if (data && data.role === "admin") {
-          navigate("/listproduct");
+  const checkAdminAuth = async () => {
+    try {
+      const res = await fetch("http://localhost:4000/auth/me?role=admin", { 
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
         }
-      })
-      .catch(() => {});
+      });
+      if (!res.ok) {
+        setFormData({ email: "", password: "" });
+        return;
+      }
+      const data = await res.json();
+      console.log("AdminLogin /me data:", data);
+      if (data && data.role === "admin") {
+        navigate("/listproduct");
+      }
+    } catch (err) {
+      setFormData({ email: "", password: "" });
+    }
+  };
+
+  useEffect(() => {
+    checkAdminAuth();
+    const handlePageShow = (event) => {
+      checkAdminAuth();
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkAdminAuth();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [navigate]);
 
   const login = async (e) => {
@@ -25,13 +55,13 @@ const AdminLogin = () => {
     const res = await fetch("http://localhost:4000/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      credentials: "include", 
       body: JSON.stringify(formData),
     });
     const data = await res.json();
     if (data.success) {
       if (data.role === "admin") {
-        window.location.href = "/listproduct";
+        window.location.replace("/listproduct");
       } else {
         setError("Tài khoản không có quyền quản trị");
       }

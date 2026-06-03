@@ -1,86 +1,91 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./ProductDisplayAdmin.css";
 import { 
-  ChevronRight, 
-  Star, 
-  CheckCircle, 
-  Truck, 
-  ShieldCheck, 
-  RefreshCw, 
-  PhoneCall,
-  Gift,
-  ShoppingCart,
-  Edit,
-  Loader2 // Thêm icon loading
+  ChevronRight, Star, CheckCircle, Truck, ShieldCheck, RefreshCw, 
+  PhoneCall, Gift, ShoppingCart, Edit, Loader2, MessageSquare, CornerDownRight, Send 
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const ProductDisplayAdmin = (props) => {
   const { product } = props;
   const navigate = useNavigate();
-  const storedUser = JSON.parse(localStorage.getItem("user"));
   
   const [mainImage, setMainImage] = useState("");
   const [tab, setTab] = useState("desc");
-  const [isAdding, setIsAdding] = useState(false); // State xử lý loading nút
-  const [showToast, setShowToast] = useState(false); // State hiện thông báo thành công
+  const [showToast, setShowToast] = useState(false);
+  const [adding, setAdding] = useState(false);
+
+
+  const [reviews, setReviews] = useState([]);
+  const [replyTexts, setReplyTexts] = useState({});
 
   useEffect(() => {
     if (product) {
       let imagesArray = [];
       try {
         imagesArray = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
-      } catch (e) {
-        imagesArray = product.images || [];
-      }
-      if (imagesArray && imagesArray.length > 0) {
-        setMainImage(imagesArray[0]);
-      }
+      } catch (e) { imagesArray = product.images || []; }
+      if (imagesArray && imagesArray.length > 0) setMainImage(imagesArray[0]);
+      
+      fetchReviews();
     }
   }, [product]);
 
-  const addToCart = async (productID) => {
-    const userID = storedUser?.id || storedUser?.userID;
-    if (!userID) {
-        alert("Vui lòng đăng nhập!");
-        return;
-    }
+  const fetchReviews = async () => {
+    if (!product?.id) return;
+    const res = await fetch(`http://localhost:4000/api/reviews/product/${product.id}`);
+    const data = await res.json();
+    setReviews(data);
+  };
 
-    setIsAdding(true); 
+  const handleReply = async (reviewId) => {
+    const text = replyTexts[reviewId];
+    if (!text?.trim()) return toast.warn("Vui lòng nhập nội dung phản hồi");
+
     try {
-      const res = await fetch("http://localhost:4000/api/cart/add", {
+      const res = await fetch(`http://localhost:4000/api/reviews/reply/${reviewId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reply: text })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Đã gửi phản hồi");
+        setReplyTexts({ ...replyTexts, [reviewId]: "" }); 
+        fetchReviews(); 
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const outOfStock = Number(product?.quantity ?? 0) <= 0;
+
+  const addToCart = async () => {
+    if (!product?.id || outOfStock) return;
+    setAdding(true);
+    try {
+      const res = await fetch("http://localhost:4000/api/cart/admin/add", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userID, productID, quantity: 1 }),
+        body: JSON.stringify({ productID: product.id, quantity: 1 }),
       });
       const data = await res.json();
-
-      if (res.ok) {
-        // Hiện thông báo thành công
+      if (data.success) {
         setShowToast(true);
-        // Tự động ẩn sau 3 giây
-        setTimeout(() => setShowToast(false), 3000);
+        setTimeout(() => setShowToast(false), 2000);
       }
-    } catch (err) {
-      console.error("Lỗi:", err);
-    } finally {
-      setIsAdding(false); // Tắt loading
-    }
+    } catch (err) { console.error(err); } 
+    finally { setAdding(false); }
   };
 
   if (!product) return <div className="loading-spinner">Đang tải...</div>;
 
-  const discount = product.old_price
-    ? Math.round(((product.old_price - product.new_price) / product.old_price) * 100)
-    : 0;
-
   return (
     <div className="product-admin-container">
-      {/* ----- THÔNG BÁO THÀNH CÔNG (TOAST) ----- */}
       <div className={`success-toast ${showToast ? "show" : ""}`}>
-        <CheckCircle size={20} />
-        <span>Thêm vào giỏ hàng thành công!</span>
+        <CheckCircle size={20} /> <span>Thêm vào giỏ hàng thành công!</span>
       </div>
 
       <div className="admin-breadcrumb">
@@ -93,94 +98,37 @@ const ProductDisplayAdmin = (props) => {
         <div className="product-admin-left">
           <div className="admin-thumbs-vertical">
             {(typeof product.images === 'string' ? JSON.parse(product.images) : product.images)?.map((img, i) => (
-              <div 
-                key={i} 
-                className={`admin-thumb-item ${mainImage === img ? "active" : ""}`}
-                onClick={() => setMainImage(img)}
-              >
-                <img 
-                  src={`http://localhost:4000/uploads/${img}`} 
-                  alt="thumbnail" 
-                  onError={(e) => e.target.src = "http://localhost:4000/uploads/vot1.jpg"}
-                />
+              <div key={i} className={`admin-thumb-item ${mainImage === img ? "active" : ""}`} onClick={() => setMainImage(img)}>
+                <img src={`http://localhost:4000/uploads/${img}`} alt="" onError={(e) => e.target.src = "http://localhost:4000/uploads/vot1.jpg"}/>
               </div>
             ))}
           </div>
           <div className="admin-main-image-wrapper">
-            <img 
-              src={`http://localhost:4000/uploads/${mainImage}`} 
-              alt={product.name} 
-              onError={(e) => e.target.src = "http://localhost:4000/uploads/vot1.jpg"}
-            />
-            {discount > 0 && <span className="admin-discount-tag">-{discount}%</span>}
+            <img src={`http://localhost:4000/uploads/${mainImage}`} alt={product.name} />
           </div>
         </div>
 
         <div className="product-admin-right">
           <div className="admin-header-flex">
             <h1 className="admin-product-name">{product.name}</h1>
-            <button className="admin-edit-link" onClick={() => navigate(`/update/${product.id}`)}>
-              <Edit size={16} /> Sửa sản phẩm
-            </button>
+            <button className="admin-edit-link" onClick={() => navigate(`/update/${product.id}`)}><Edit size={16} /> Sửa sản phẩm</button>
           </div>
           
           <div className="admin-product-rating">
             <div className="admin-stars">
-              {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
+              {[...Array(5)].map((_, i) => <Star key={i} size={16} fill={i < 5 ? "#ffc107" : "none"} color="#ffc107" />)}
             </div>
-            <span className="admin-status-stock">
-               <CheckCircle size={14} /> Kho: {product.quantity} sản phẩm
-            </span>
+            <span className="admin-status-stock"><CheckCircle size={14} /> Kho: {product.quantity ?? 0}</span>
           </div>
 
           <div className="admin-price-box">
-            <span className="admin-current-price">{Number(product.new_price).toLocaleString("vi-VN")}₫</span>
-            {product.old_price > 0 && (
-              <span className="admin-original-price">{Number(product.old_price).toLocaleString("vi-VN")}₫</span>
-            )}
-          </div>
-
-          <div className="admin-promo-box">
-            <div className="admin-promo-title">
-              <Gift size={18} /> QUÀ TẶNG KÈM & ƯU ĐÃI
-            </div>
-            <ul className="admin-promo-list">
-              <li>✅ Tặng 01 cuốn cán vợt cầu lông cao cấp.</li>
-              <li>✅ Bảo hành chính hãng nếu có lỗi từ NSX.</li>
-            </ul>
+            <span className="admin-current-price">{Number(product.new_price).toLocaleString()}₫</span>
           </div>
 
           <div className="admin-actions">
-            <button 
-              className={`admin-btn-cart ${isAdding ? "btn-loading" : ""}`}
-              onClick={() => addToCart(product.id)}
-              disabled={product.quantity <= 0 || isAdding}
-            >
-              {isAdding ? (
-                <Loader2 className="spinner" size={20} />
-              ) : (
-                <>
-                THÊM VÀO GIỎ
-                  {/* <button onClick={() => addToCart(product.id)}></button> */}
-                </>
-              )}
+            <button className="admin-btn-cart" onClick={addToCart} disabled={adding || outOfStock} title={outOfStock ? "Sản phẩm đã hết hàng" : "Thêm sản phẩm này vào giỏ hàng của admin"}>
+              {outOfStock ? "Hết hàng" : adding ? <Loader2 className="animate-spin" /> : <><ShoppingCart size={20} /> Thêm vào giỏ admin</>}
             </button>
-          </div>
-          
-          <div className="admin-hotline">
-            <PhoneCall size={18} /> Hotline hỗ trợ: <strong>0123.456.789</strong>
-          </div>
-        </div>
-
-        <div className="product-admin-trust">
-          <div className="admin-trust-item">
-            <Truck /><p>GIAO HÀNG NHANH</p>
-          </div>
-          <div className="admin-trust-item">
-            <ShieldCheck /><p>CHÍNH HÃNG 100%</p>
-          </div>
-          <div className="admin-trust-item">
-            <RefreshCw /><p>ĐỔI TRẢ 7 NGÀY</p>
           </div>
         </div>
       </div>
@@ -189,20 +137,64 @@ const ProductDisplayAdmin = (props) => {
         <div className="admin-tabs-header">
           <button className={tab === "desc" ? "active" : ""} onClick={() => setTab("desc")}>MÔ TẢ</button>
           <button className={tab === "spec" ? "active" : ""} onClick={() => setTab("spec")}>THÔNG SỐ</button>
+          <button className={tab === "review" ? "active" : ""} onClick={() => setTab("review")}>
+            ĐÁNH GIÁ ({reviews.length})
+          </button>
         </div>
+
         <div className="admin-tabs-body">
-          {tab === "desc" ? (
-            <div className="admin-desc-text">
-              {product.description || "Nội dung mô tả sản phẩm dành cho quản trị viên xem trước."}
-            </div>
-          ) : (
+          {tab === "desc" && <div className="admin-desc-text">{product.description}</div>}
+          
+          {tab === "spec" && (
             <table className="admin-specs-table">
               <tbody>
-                <tr><td>Thương hiệu</td><td>{product.brand || "Yonex"}</td></tr>
-                <tr><td>Trọng lượng</td><td>4U (83g)</td></tr>
-                <tr><td>Sức căng</td><td>11-12.5kg</td></tr>
+                <tr><td>Trọng lượng</td><td>{product.weight || "N/A"}</td></tr>
+                <tr><td>Mức căng</td><td>{product.max_tension || "N/A"}</td></tr>
+                <tr><td>Điểm cân bằng</td><td>{product.balance_point || "N/A"}</td></tr>
               </tbody>
             </table>
+          )}
+
+          {tab === "review" && (
+            <div className="admin-reviews-list">
+              {reviews.length === 0 ? <p className="no-review">Chưa có đánh giá nào cho sản phẩm này.</p> : 
+                reviews.map((rev) => (
+                  <div key={rev.id} className="admin-review-item">
+                    <div className="rev-user-info">
+                      <img src={rev.userAvatar ? `http://localhost:4000/uploads/avatars/${rev.userAvatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt="" />
+                      <div>
+                        <strong>{rev.userName}</strong>
+                        <div className="rev-stars">
+                          {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < rev.rating ? "#ffc107" : "none"} color="#ffc107" />)}
+                        </div>
+                      </div>
+                      <span className="rev-date">{new Date(rev.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="rev-comment">{rev.comment}</p>
+
+                    {rev.reply && (
+                      <div className="admin-reply-box">
+                        <CornerDownRight size={16} />
+                        <div className="reply-content">
+                          <strong>Phản hồi của Shop:</strong>
+                          <p>{rev.reply}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="admin-reply-input">
+                      <input 
+                        type="text" 
+                        placeholder={rev.reply ? "Cập nhật phản hồi..." : "Nhập lời cảm ơn hoặc phản hồi..."}
+                        value={replyTexts[rev.id] || ""}
+                        onChange={(e) => setReplyTexts({...replyTexts, [rev.id]: e.target.value})}
+                      />
+                      <button onClick={() => handleReply(rev.id)}><Send size={16}/></button>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
           )}
         </div>
       </div>

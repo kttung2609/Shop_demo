@@ -15,29 +15,24 @@ const Item = (props) => {
   return (
     <Link to={`/product/${props.id}`} className="item-card">
 
-      {/* IMAGE */}
       <div className="item-image">
 
         <img src={imageUrl} alt={props.name} />
 
-        {/* DISCOUNT */}
         {discount > 0 && (
           <span className="badge sale">-{discount}%</span>
         )}
 
-        {/* STOCK */}
         {props.quantity <= 0 && (
           <span className="badge out">Hết hàng</span>
         )}
 
-        {/* HOVER */}
         <div className="overlay">
           <button>Xem chi tiết</button>
         </div>
 
       </div>
 
-      {/* INFO */}
       <div className="item-content">
 
         <h3 className="item-title">{props.name}</h3>

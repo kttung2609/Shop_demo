@@ -285,6 +285,10 @@
   cursor: pointer;
   transition: 0.3s;
   box-shadow: 0 4px 15px rgba(255, 65, 65, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-place-order:hover {
@@ -303,4 +307,18 @@
   .checkout-layout { grid-template-columns: 1fr; }
   .input-grid { grid-template-columns: 1fr; }
   .checkout-right { order: -1; } /* Đơn hàng hiện lên đầu trên mobile */
+}
+
+/* Animation for spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
