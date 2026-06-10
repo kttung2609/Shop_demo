@@ -136,7 +136,7 @@ router.get("/me/admin", (req, res) => {
   if (!token) return res.status(401).json(null);
   jwt.verify(token, SECRET, (err, decoded) => {
     if (err || decoded.role !== "admin") return res.status(403).json(null);
-    db.query("SELECT id, name, email, role, avatar FROM users WHERE id = ?", [decoded.id], (err, results) => {
+    db.query("SELECT id, name, email, role, avatar, phone FROM users WHERE id = ?", [decoded.id], (err, results) => {
       if (err || !results || results.length === 0) {
         return res.status(500).json(null);
       }

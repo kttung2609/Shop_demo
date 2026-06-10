@@ -147,7 +147,7 @@ const Profile = () => {
         </aside>
 
         <main className="profile-content">
-          <div className="content-card">
+          <div className="content-card" id="profile-update-section">
             <div className="card-header">
               <h2>Hồ sơ của tôi</h2>
               <p>Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
@@ -166,7 +166,6 @@ const Profile = () => {
                     placeholder="Nhập họ và tên"
                   />
                 </div>
-                <button className="edit-btn" type="button" onClick={scrollToProfileSection}>Thay đổi</button>
               </div>
 
               <div className="info-item">
@@ -192,9 +191,6 @@ const Profile = () => {
                     placeholder="Nhập số điện thoại"
                   />
                 </div>
-                <button className="edit-btn save-btn" type="button" onClick={handleSaveProfile} disabled={savingProfile}>
-                  {savingProfile ? "Đang lưu..." : "Cập nhật"}
-                </button>
               </div>
 
               <div className="info-item">
@@ -204,6 +200,13 @@ const Profile = () => {
                   <p>#{user.id}</p>
                 </div>
               </div>
+            </div>
+
+            <div className="profile-actions-footer">
+              <button className="btn-save-profile" type="button" onClick={handleSaveProfile} disabled={savingProfile}>
+                <Save size={16} />
+                {savingProfile ? "Đang lưu..." : "Cập nhật hồ sơ"}
+              </button>
             </div>
           </div>
         </main>

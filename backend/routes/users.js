@@ -80,58 +80,85 @@ router.put("/update/:id", async (req, res) => {
   const id = req.params.id;
 
   try {
-    const updates = [];
-    const values = [];
+    db.query("SELECT id, name, email, phone, avatar, role FROM users WHERE id=? LIMIT 1", [id], async (lookupErr, rows) => {
+      if (lookupErr) {
+        console.log(lookupErr);
+        return res.status(500).json({ success: false, message: "Không thể tải dữ liệu người dùng" });
+      }
 
-    if (typeof name !== "undefined") {
-      updates.push("name=?");
-      values.push(name);
-    }
+      if (!rows || rows.length === 0) {
+        return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
+      }
 
-    if (typeof email !== "undefined") {
-      updates.push("email=?");
-      values.push(email);
-      updates.push("email_verified=0");
-      updates.push("email_verified_at=NULL");
-      updates.push("email_verification_token=NULL");
-      updates.push("email_verification_expires=NULL");
-    }
+      const currentUser = rows[0];
+      const updates = [];
+      const values = [];
+      const nextName = typeof name === "string" ? name.trim() : undefined;
+      const nextEmail = typeof email === "string" ? email.trim().toLowerCase() : undefined;
+      const nextPhone = typeof phone === "string" ? phone.trim() : undefined;
+      const nextAvatar = typeof avatar === "string" ? avatar.trim() : undefined;
 
-    if (typeof phone !== "undefined") {
-      updates.push("phone=?");
-      values.push(phone);
-    }
+      if (typeof nextName === "string" && nextName !== currentUser.name) {
+        updates.push("name=?");
+        values.push(nextName);
+      }
 
-    if (typeof avatar !== "undefined") {
-      updates.push("avatar=?");
-      values.push(avatar);
-    }
+      if (typeof nextEmail === "string" && nextEmail !== (currentUser.email || "").trim().toLowerCase()) {
+        updates.push("email=?");
+        values.push(nextEmail);
 
-    if (typeof password === "string" && password.trim()) {
-      const hashedPassword = await hashPassword(password.trim());
-      updates.push("password=?");
-      values.push(hashedPassword);
-    }
+        if (currentUser.role !== "admin") {
+          updates.push("email_verified=0");
+          updates.push("email_verified_at=NULL");
+          updates.push("email_verification_token=NULL");
+          updates.push("email_verification_expires=NULL");
+        }
+      }
 
-    if (!updates.length) {
-      return res.json({ success: false, message: "Không có dữ liệu cập nhật" });
-    }
+      if (typeof nextPhone === "string" && nextPhone !== (currentUser.phone || "").trim()) {
+        updates.push("phone=?");
+        values.push(nextPhone);
+      }
 
-    const sql = `
-      UPDATE users 
-      SET ${updates.join(", ")}
-      WHERE id=?
-    `;
+      if (typeof nextAvatar === "string" && nextAvatar !== (currentUser.avatar || "").trim()) {
+        updates.push("avatar=?");
+        values.push(nextAvatar);
+      }
 
-    values.push(id);
+      if (typeof password === "string" && password.trim()) {
+        const hashedPassword = await hashPassword(password.trim());
+        updates.push("password=?");
+        values.push(hashedPassword);
+      }
 
-    db.query(sql, values, (err) => {
-      if (err) return res.json({ success: false });
+      if (!updates.length) {
+        return res.json({ success: true, message: "Không có thay đổi để cập nhật" });
+      }
 
-      res.json({ success: true });
+      const sql = `
+        UPDATE users
+        SET ${updates.join(", ")}
+        WHERE id=?
+      `;
+
+      values.push(id);
+
+      db.query(sql, values, (err) => {
+        if (err) {
+          console.log("Update user failed:", err);
+          if (err.code === "ER_DUP_ENTRY") {
+            return res.status(400).json({ success: false, message: "Email này đã tồn tại" });
+          }
+
+          return res.status(500).json({ success: false, message: err.message || "Không thể cập nhật thành viên" });
+        }
+
+        res.json({ success: true });
+      });
     });
   } catch (error) {
-    res.json({ success: false, message: "Không thể cập nhật thành viên" });
+    console.log("Update user exception:", error);
+    res.status(500).json({ success: false, message: error.message || "Không thể cập nhật thành viên" });
   }
 });
 

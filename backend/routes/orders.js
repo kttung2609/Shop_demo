@@ -319,67 +319,80 @@ router.put("/update/:id", (req, res) => {
 
 
 router.put("/cancel/:id", (req, res) => {
+  (async () => {
+    const { note } = req.body;
 
-  const { note } = req.body;
-
-  if (!note) {
-    return res.json({ success: false, message: "Thiếu lý do huỷ" });
-  }
-
-  const orderId = req.params.id;
-
-  db.query(
-    "SELECT status, total, DATE(created_at) as stat_date FROM orders WHERE id = ?",
-    [orderId],
-    (err, orderResults) => {
-      if (err) {
-        console.log(err);
-        return res.json({ success: false });
-      }
-
-      if (!orderResults.length) {
-        return res.json({ success: false, message: "Không tìm thấy đơn hàng" });
-      }
-
-      if ((orderResults[0].status || "").toLowerCase() === "shipping") {
-        return res.json({ success: false, message: "Đơn đang giao không thể huỷ" });
-      }
-
-      const orderTotal = Number(orderResults[0].total) || 0;
-      const statDate = orderResults[0].stat_date;
-
-      db.query(
-        "SELECT SUM(quantity) as products_sold FROM order_items WHERE order_id = ?",
-        [orderId],
-        (itemErr, itemResults) => {
-          if (itemErr) {
-            console.log(itemErr);
-            return res.json({ success: false });
-          }
-
-          const productsSold = Number(itemResults[0]?.products_sold || 0);
-
-          modifyDailyStatistics(statDate, -orderTotal, -1, -productsSold, (statErr) => {
-            if (statErr) {
-              console.log("DAILY STAT ERROR:", statErr);
-            }
-
-            db.query(
-              "UPDATE orders SET status='cancelled', note=? WHERE id=?",
-              [note, orderId],
-              (updateErr) => {
-                if (updateErr) {
-                  console.log(updateErr);
-                  return res.json({ success: false });
-                }
-                res.json({ success: true });
-              }
-            );
-          });
-        }
-      );
+    if (!note) {
+      return res.json({ success: false, message: "Thiếu lý do huỷ" });
     }
-  );
+
+    const orderId = req.params.id;
+
+    await beginTransaction();
+
+    try {
+      const orderRows = await query(
+        "SELECT id, status, total, DATE(created_at) as stat_date FROM orders WHERE id = ? FOR UPDATE",
+        [orderId]
+      );
+
+      if (!orderRows.length) {
+        throw new Error("Không tìm thấy đơn hàng");
+      }
+
+      const order = orderRows[0];
+      const currentStatus = (order.status || "").toLowerCase();
+
+      if (currentStatus === "cancelled") {
+        await rollback();
+        return res.json({ success: true, message: "Đơn hàng đã được huỷ trước đó" });
+      }
+
+      if (currentStatus === "shipping") {
+        throw new Error("Đơn đang giao không thể huỷ");
+      }
+
+      const orderItems = await query(
+        "SELECT product_id, quantity FROM order_items WHERE order_id = ? FOR UPDATE",
+        [orderId]
+      );
+
+      if (orderItems.length > 0) {
+        for (const item of orderItems) {
+          await query(
+            "UPDATE products SET quantity = quantity + ?, stock = stock + ? WHERE id = ?",
+            [Number(item.quantity) || 0, Number(item.quantity) || 0, item.product_id]
+          );
+        }
+      }
+
+      await query(
+        "UPDATE orders SET status='cancelled', note=? WHERE id=?",
+        [note, orderId]
+      );
+
+      await commit();
+
+      const orderTotal = Number(order.total) || 0;
+      const productsSold = orderItems.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+      const statDate = order.stat_date;
+
+      modifyDailyStatistics(statDate, -orderTotal, -1, -productsSold, (statErr) => {
+        if (statErr) {
+          console.log("DAILY STAT ERROR:", statErr);
+        }
+      });
+
+      return res.json({ success: true });
+    } catch (error) {
+      await rollback();
+      console.log("ORDER CANCEL ERROR:", error);
+      return res.json({ success: false, message: error.message || "Huỷ đơn thất bại" });
+    }
+  })().catch((error) => {
+    console.log("ORDER CANCEL ROUTE ERROR:", error);
+    res.json({ success: false, message: "Huỷ đơn thất bại" });
+  });
 
 });
 

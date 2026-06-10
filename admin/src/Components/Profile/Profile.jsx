@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminContext } from "../../Context/AdminContext";
-import { User, Mail, Fingerprint, LogOut, ShieldCheck, Camera, ChevronRight, Save } from "lucide-react";
+import { User, Mail, Phone, Fingerprint, LogOut, ShieldCheck, Camera, ChevronRight, Save } from "lucide-react";
 import { toast } from "react-toastify";
 import "./Profile.css";
 
 const AdminProfile = () => {
   const { admin, setAdmin, fetchAdminData } = useContext(AdminContext);
-  const [profileForm, setProfileForm] = useState({ name: "" });
+  const [profileForm, setProfileForm] = useState({ name: "", email: "", phone: "" });
   const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
 
@@ -21,6 +21,8 @@ const AdminProfile = () => {
     if (admin) {
       setProfileForm({
         name: admin.name || "",
+        email: admin.email || "",
+        phone: admin.phone || "",
       });
     }
   }, [admin]);
@@ -41,6 +43,8 @@ const AdminProfile = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: profileForm.name.trim(),
+          email: profileForm.email.trim(),
+          phone: profileForm.phone.trim(),
         }),
       });
 
@@ -56,6 +60,7 @@ const AdminProfile = () => {
       }
 
       toast.success("Đã cập nhật hồ sơ admin");
+      window.location.reload();
     } catch (error) {
       toast.error(error.message || "Không thể cập nhật hồ sơ admin");
     } finally {
@@ -149,19 +154,36 @@ const AdminProfile = () => {
                     placeholder="Nhập họ và tên"
                   />
                 </div>
-                <button className="edit-btn save-btn" type="button" onClick={handleSaveProfile} disabled={savingProfile}>
-                  <Save size={16} />
-                  {savingProfile ? "Đang lưu..." : "Cập nhật"}
-                </button>
               </div>
 
               <div className="info-item">
                 <div className="info-icon"><Mail size={20} /></div>
                 <div className="info-text">
                   <label>Địa chỉ Email</label>
-                  <p>{admin.email}</p>
+                  <input
+                    className="profile-input inline"
+                    name="email"
+                    type="email"
+                    value={profileForm.email}
+                    onChange={handleChange}
+                    placeholder="Nhập địa chỉ email"
+                  />
                 </div>
                 <span className="verified-badge">Quản trị</span>
+              </div>
+
+              <div className="info-item">
+                <div className="info-icon"><Phone size={20} /></div>
+                <div className="info-text">
+                  <label>Số điện thoại</label>
+                  <input
+                    className="profile-input inline"
+                    name="phone"
+                    value={profileForm.phone}
+                    onChange={handleChange}
+                    placeholder="Nhập số điện thoại"
+                  />
+                </div>
               </div>
 
               <div className="info-item">
@@ -171,6 +193,13 @@ const AdminProfile = () => {
                   <p>#{admin.id}</p>
                 </div>
               </div>
+            </div>
+
+            <div className="profile-actions-footer">
+              <button className="btn-save-profile" type="button" onClick={handleSaveProfile} disabled={savingProfile}>
+                <Save size={16} />
+                {savingProfile ? "Đang lưu..." : "Cập nhật tổng"}
+              </button>
             </div>
           </div>
         </main>
