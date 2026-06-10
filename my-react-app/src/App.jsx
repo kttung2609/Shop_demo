@@ -10,9 +10,12 @@ import Product from './Pages/Product'
 import Cart from './Pages/Cart'
 import LoginSignup from './Pages/LoginSignup'
 import Profile from "./Components/Profile/Proflie";
+import ChangePassword from "./Components/Profile/ChangePassword";
 import Checkout from "./Components/Checkout/Checkout";
 import ShopCategory from './Pages/ShopCategory/ShopCategory'
+import VerifyEmail from './Pages/VerifyEmail'
 import Orders from "./Components/Orders/Orders";
+import Order_items from "./Components/order_item/Order_items";
 import Popular from "./Components/Popular/Popular";
 import products from "./Pages/Product";
 import review from "./Components/ReviewModal/ReviewModal";
@@ -67,9 +70,13 @@ function App() {
         <Route path='/cart' element={<Cart />} />
 
         <Route path='/login' element={<LoginSignup />} />
+        <Route path='/verify-email/:token' element={<VerifyEmail />} />
         <Route path="/profile" element={<Profile />}/>
+        <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/order-items" element={<Order_items />} />
+        <Route path="/order-items/:orderId" element={<Order_items />} />
         <Route path="/review" element={<Orders />} />
       </Routes>
 

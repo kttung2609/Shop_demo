@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import "./AdminStats.css";
 
 const AdminStats = () => {
+  const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")}₫`;
+
   const [type, setType] = useState("day");
 
   // ===== STATE =====
@@ -33,6 +35,26 @@ const AdminStats = () => {
   });
 
   const [loading, setLoading] = useState(false);
+
+  const monthTotals = monthData.reduce(
+    (totals, item) => ({
+      totalOrders: totals.totalOrders + Number(item.total_orders || 0),
+      totalRevenue: totals.totalRevenue + Number(item.total_revenue || 0),
+      newUsers: totals.newUsers + Number(item.new_users || 0),
+      productsSold: totals.productsSold + Number(item.products_sold || 0),
+    }),
+    { totalOrders: 0, totalRevenue: 0, newUsers: 0, productsSold: 0 }
+  );
+
+  const yearTotals = yearData.reduce(
+    (totals, item) => ({
+      totalOrders: totals.totalOrders + Number(item.total_orders || 0),
+      totalRevenue: totals.totalRevenue + Number(item.total_revenue || 0),
+      newUsers: totals.newUsers + Number(item.new_users || 0),
+      productsSold: totals.productsSold + Number(item.products_sold || 0),
+    }),
+    { totalOrders: 0, totalRevenue: 0, newUsers: 0, productsSold: 0 }
+  );
 
   // 🔥 load ngày hôm nay
   useEffect(() => {
@@ -237,7 +259,7 @@ const AdminStats = () => {
                 <div className="card-icon">💰</div>
                 <div className="card-title">Doanh thu</div>
                 <h2 className="card-value">
-                  {dayData.total_revenue?.toLocaleString("vi-VN") || 0}₫
+                  {formatMoney(dayData.total_revenue)}
                 </h2>
               </div>
               <div className="stats-card">
@@ -287,7 +309,7 @@ const AdminStats = () => {
                     <td>{new Date(item.date).toLocaleDateString('vi-VN')}</td>
                     <td>{item.total_orders}</td>
                     <td>
-                      {item.total_revenue?.toLocaleString("vi-VN")}₫
+                      {formatMoney(item.total_revenue)}
                     </td>
                     <td>{item.new_users || 0}</td>
                     <td>{item.products_sold || 0}</td>
@@ -323,6 +345,26 @@ const AdminStats = () => {
           <button className="stats-button" onClick={fetchMonth}>Xem thống kê</button>
 
           {monthData.length > 0 ? (
+            <>
+              <div className="summary-strip">
+                <div className="summary-card">
+                  <span className="summary-label">Tổng doanh thu tháng</span>
+                  <strong className="summary-value">{formatMoney(monthTotals.totalRevenue)}</strong>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-label">Tổng đơn hàng</span>
+                  <strong className="summary-value">{monthTotals.totalOrders}</strong>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-label">Khách hàng mới</span>
+                  <strong className="summary-value">{monthTotals.newUsers}</strong>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-label">Sản phẩm đã bán</span>
+                  <strong className="summary-value">{monthTotals.productsSold}</strong>
+                </div>
+              </div>
+
             <table className="stats-table">
               <thead>
                 <tr>
@@ -339,7 +381,7 @@ const AdminStats = () => {
                     <td>{new Date(item.date).toLocaleDateString('vi-VN')}</td>
                     <td>{item.total_orders}</td>
                     <td>
-                      {item.total_revenue?.toLocaleString("vi-VN")}₫
+                      {formatMoney(item.total_revenue)}
                     </td>
                     <td>{item.new_users || 0}</td>
                     <td>{item.products_sold || 0}</td>
@@ -347,6 +389,7 @@ const AdminStats = () => {
                 ))}
               </tbody>
             </table>
+            </>
           ) : (
             !loading && <div className="no-data">Không có dữ liệu cho tháng này</div>
           )}
@@ -367,6 +410,26 @@ const AdminStats = () => {
           <button className="stats-button" onClick={fetchYear}>Xem thống kê</button>
 
           {yearData.length > 0 ? (
+            <>
+              <div className="summary-strip">
+                <div className="summary-card">
+                  <span className="summary-label">Tổng doanh thu năm</span>
+                  <strong className="summary-value">{formatMoney(yearTotals.totalRevenue)}</strong>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-label">Tổng đơn hàng</span>
+                  <strong className="summary-value">{yearTotals.totalOrders}</strong>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-label">Khách hàng mới</span>
+                  <strong className="summary-value">{yearTotals.newUsers}</strong>
+                </div>
+                <div className="summary-card">
+                  <span className="summary-label">Sản phẩm đã bán</span>
+                  <strong className="summary-value">{yearTotals.productsSold}</strong>
+                </div>
+              </div>
+
             <table className="stats-table">
               <thead>
                 <tr>
@@ -383,7 +446,7 @@ const AdminStats = () => {
                     <td>Tháng {item.month}</td>
                     <td>{item.total_orders}</td>
                     <td>
-                      {item.total_revenue?.toLocaleString("vi-VN")}₫
+                      {formatMoney(item.total_revenue)}
                     </td>
                     <td>{item.new_users || 0}</td>
                     <td>{item.products_sold || 0}</td>
@@ -391,6 +454,7 @@ const AdminStats = () => {
                 ))}
               </tbody>
             </table>
+            </>
           ) : (
             !loading && <div className="no-data">Không có dữ liệu cho năm này</div>
           )}
@@ -413,7 +477,7 @@ const AdminStats = () => {
                 </div>
                 <div className="overview-stat-item">
                   <span className="overview-stat-label">Doanh thu:</span>
-                  <span className="overview-stat-value">{weeklyStats.totalRevenue.toLocaleString("vi-VN")}₫</span>
+                  <span className="overview-stat-value">{formatMoney(weeklyStats.totalRevenue)}</span>
                 </div>
                 <div className="overview-stat-item">
                   <span className="overview-stat-label">Khách hàng mới:</span>
@@ -440,7 +504,7 @@ const AdminStats = () => {
                 </div>
                 <div className="overview-stat-item">
                   <span className="overview-stat-label">Doanh thu:</span>
-                  <span className="overview-stat-value">{monthlyStats.totalRevenue.toLocaleString("vi-VN")}₫</span>
+                  <span className="overview-stat-value">{formatMoney(monthlyStats.totalRevenue)}</span>
                 </div>
                 <div className="overview-stat-item">
                   <span className="overview-stat-label">Khách hàng mới:</span>

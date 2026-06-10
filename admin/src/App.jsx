@@ -9,6 +9,7 @@ import Sidebar from './Components/Sidebar/Sidebar';
 import Navbar from './Components/Navbar/Navbar';
 import Users from './Components/Users/Users';
 import Orders from './Components/Orders/Orders';
+import Order_items from './Components/order_item/Order_items';
 import AddProduct from './Components/AddProduct/AddProduct';
 import UpdateProduct from './Components/UpdateProduct/UpdateProduct';
 import AdminProductPage from './Components/ProductDisplayAdmin/ProductDisplayAdmin';
@@ -18,6 +19,7 @@ import Brands from './Components/Brands/Brands';
 import CartItems from "./Components/CartItems/CartItems";
 import Checkout from "./Components/Checkout/Checkout";
 import AdminStats from "./Components/AdminStats/AdminStats";
+import AdminProfile from "./Components/Profile/Profile";
 import './App.css'; // File CSS quan trọng để dàn trang
 
 function App() {
@@ -53,11 +55,15 @@ function App() {
             <Route path="/product/:productId" element={<ProtectedRoute><ProductAdmin /></ProtectedRoute>} />
             <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="/order-items" element={<ProtectedRoute><Order_items /></ProtectedRoute>} />
+            <Route path="/order-items/:orderId" element={<ProtectedRoute><Order_items /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><CartItems /></ProtectedRoute>} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/categories" element={<ProtectedRoute><Category /></ProtectedRoute>} />
             <Route path="/brands" element={<ProtectedRoute><Brands /></ProtectedRoute>} />
             <Route path="/stats" element={<ProtectedRoute><AdminStats /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
             <Route path="/" element={<Navigate to="/listproduct" />} />
           </Routes>
         </div>

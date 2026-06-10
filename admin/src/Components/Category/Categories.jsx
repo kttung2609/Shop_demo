@@ -26,6 +26,7 @@ const Categories = () => {
       setCategories(data);
     } catch (error) {
       console.error("Lỗi fetch categories:", error);
+      toast.error("Không tải được danh mục");
     }
   };
 
@@ -35,41 +36,70 @@ const Categories = () => {
 
   const handleAdd = async () => {
     if (!name.trim()) return toast.warning("Vui lòng nhập tên danh mục");
-    const res = await fetch("http://localhost:4000/api/categories/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setCategories([...categories, data.category]);
-      setShowDialog(false);
-      setName("");
+
+    try {
+      const res = await fetch("http://localhost:4000/api/categories/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchCategories();
+        setShowDialog(false);
+        setName("");
+        toast.success("Đã thêm danh mục");
+      } else {
+        toast.error(data.message || "Không thể thêm danh mục");
+      }
+    } catch (error) {
+      console.error("Lỗi thêm danh mục:", error);
+      toast.error("Không thể kết nối tới máy chủ");
     }
   };
 
   const handleUpdate = async () => {
-    const res = await fetch(`http://localhost:4000/api/categories/update/${currentId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      const updated = categories.map((cat) => cat.id === currentId ? { ...cat, name } : cat);
-      setCategories(updated);
-      setShowDialog(false);
-      setName("");
-      setIsEdit(false);
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/categories/update/${currentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchCategories();
+        setShowDialog(false);
+        setName("");
+        setIsEdit(false);
+        toast.success("Đã cập nhật danh mục");
+      } else {
+        toast.error(data.message || "Không thể cập nhật danh mục");
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật danh mục:", error);
+      toast.error("Không thể kết nối tới máy chủ");
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xoá danh mục này có thể ảnh hưởng đến sản phẩm liên quan. Bạn chắc chứ?")) return;
-    const res = await fetch(`http://localhost:4000/api/categories/delete/${id}`, { method: "DELETE" });
-    const data = await res.json();
-    if (data.success) {
-      setCategories(categories.filter((cat) => cat.id !== id));
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/categories/delete/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchCategories();
+        toast.success("Đã xóa danh mục");
+      } else {
+        toast.error(data.message || "Không thể xóa danh mục");
+      }
+    } catch (error) {
+      console.error("Lỗi xóa danh mục:", error);
+      toast.error("Không thể kết nối tới máy chủ");
     }
   };
 

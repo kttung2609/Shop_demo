@@ -65,7 +65,7 @@ const LoginSignup = () => {
     });
     const data = await res.json();
     if (data.success) {
-      toast.success("Đăng ký thành công!");
+      toast.success(data.message || "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.");
       setState("Login");
     } else {
       toast.error(data.message);
@@ -95,6 +95,11 @@ const LoginSignup = () => {
             <input name="password" onChange={changeHandler} type="password" placeholder="Mật khẩu" />
           </div>
         </div>
+        {state === "Sign Up" && (
+          <div className="auth-note" role="status">
+            Sau khi đăng ký, hãy kiểm tra email để xác thực tài khoản trước khi đăng nhập.
+          </div>
+        )}
         <button className="auth-btn" onClick={() => (state === "Login" ? login() : signup())}>
           {state === "Login" ? "ĐĂNG NHẬP" : "TẠO TÀI KHOẢN"}
           <ArrowRight size={20} />

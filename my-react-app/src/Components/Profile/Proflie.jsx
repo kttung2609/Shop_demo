@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./Profile.css";
 import { ShopContext } from "../../Context/ShopContext";
 import { useNavigate } from "react-router-dom";
@@ -10,11 +10,16 @@ import {
   Package, 
   ShieldCheck, 
   Camera,
-  ChevronRight 
+  ChevronRight,
+  Phone,
+  Save
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const Profile = () => {
-  const { user, setUser } = useContext(ShopContext);
+  const { user, setUser, fetchUserData } = useContext(ShopContext);
+  const [profileForm, setProfileForm] = useState({ name: "", phone: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,6 +27,56 @@ const Profile = () => {
       navigate("/login");
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
+
+  const scrollToProfileSection = () => {
+    const element = document.getElementById("profile-update-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleProfileChange = (event) => {
+    const { name, value } = event.target;
+    setProfileForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSaveProfile = async (event) => {
+    event?.preventDefault?.();
+    if (!user?.id) return;
+
+    try {
+      setSavingProfile(true);
+      const res = await fetch(`http://localhost:4000/api/users/update/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profileForm.name.trim(),
+          phone: profileForm.phone.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Không thể cập nhật thông tin");
+      }
+
+      await fetchUserData();
+      toast.success("Đã cập nhật hồ sơ");
+    } catch (error) {
+      toast.error(error.message || "Không thể cập nhật hồ sơ");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -75,13 +130,13 @@ const Profile = () => {
           </div>
 
           <nav className="sidebar-menu">
-            <button className="menu-item active">
+            <button className="menu-item active" onClick={scrollToProfileSection}>
               <User size={18} /> Hồ sơ cá nhân
             </button>
             <button className="menu-item" onClick={() => navigate("/orders")}>
               <Package size={18} /> Đơn hàng đã mua
             </button>
-            <button className="menu-item">
+            <button className="menu-item" onClick={() => navigate("/change-password")}>
               <ShieldCheck size={18} /> Đổi mật khẩu
             </button>
             <hr />
@@ -103,9 +158,15 @@ const Profile = () => {
                 <div className="info-icon"><User size={20} /></div>
                 <div className="info-text">
                   <label>Họ và tên</label>
-                  <p>{user.name}</p>
+                  <input
+                    className="profile-input inline"
+                    name="name"
+                    value={profileForm.name}
+                    onChange={handleProfileChange}
+                    placeholder="Nhập họ và tên"
+                  />
                 </div>
-                <button className="edit-btn">Thay đổi</button>
+                <button className="edit-btn" type="button" onClick={scrollToProfileSection}>Thay đổi</button>
               </div>
 
               <div className="info-item">
@@ -114,7 +175,26 @@ const Profile = () => {
                   <label>Địa chỉ Email</label>
                   <p>{user.email}</p>
                 </div>
-                <span className="verified-badge">Đã xác thực</span>
+                <span className={`verified-badge ${user.email_verified ? "verified" : "pending"}`}>
+                  {user.email_verified ? "Đã xác thực" : "Chưa xác thực"}
+                </span>
+              </div>
+
+              <div className="info-item">
+                <div className="info-icon"><Phone size={20} /></div>
+                <div className="info-text">
+                  <label>Số điện thoại</label>
+                  <input
+                    className="profile-input inline"
+                    name="phone"
+                    value={profileForm.phone}
+                    onChange={handleProfileChange}
+                    placeholder="Nhập số điện thoại"
+                  />
+                </div>
+                <button className="edit-btn save-btn" type="button" onClick={handleSaveProfile} disabled={savingProfile}>
+                  {savingProfile ? "Đang lưu..." : "Cập nhật"}
+                </button>
               </div>
 
               <div className="info-item">
@@ -124,10 +204,6 @@ const Profile = () => {
                   <p>#{user.id}</p>
                 </div>
               </div>
-            </div>
-
-            <div className="profile-actions-footer">
-              <button className="btn-save-profile">CẬP NHẬT THÔNG TIN</button>
             </div>
           </div>
         </main>

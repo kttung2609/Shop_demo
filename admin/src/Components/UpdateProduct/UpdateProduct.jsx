@@ -29,6 +29,7 @@ const UpdateProduct = () => {
     old_price: "",
     new_price: "",
     quantity: "",
+    added_quantity: "",
     description: "",
     weight: "",
     max_tension: "",
@@ -50,6 +51,7 @@ const UpdateProduct = () => {
             old_price: product.old_price,
             new_price: product.new_price,
             quantity: product.quantity,
+            added_quantity: "",
             description: product.description || "",
             weight: product.weight || "",
             max_tension: product.max_tension || product.tension || "",
@@ -95,6 +97,7 @@ const UpdateProduct = () => {
     formData.append("old_price", productDetails.old_price);
     formData.append("new_price", productDetails.new_price);
     formData.append("quantity", productDetails.quantity);
+    formData.append("added_quantity", productDetails.added_quantity);
     formData.append("description", productDetails.description);
     formData.append("weight", productDetails.weight);
     formData.append("max_tension", productDetails.max_tension);
@@ -230,8 +233,18 @@ const UpdateProduct = () => {
               <input type="number" name="new_price" value={productDetails.new_price} onChange={changeHandler} />
             </div>
             <div className="form-item">
-              <label><Package size={17} /> Tồn kho</label>
-              <input type="number" name="quantity" value={productDetails.quantity} onChange={changeHandler} />
+              <label><Package size={17} /> Tồn kho hiện tại</label>
+              <input type="number" name="quantity" value={productDetails.quantity} readOnly />
+            </div>
+            <div className="form-item">
+              <label><Package size={17} /> Số lượng nhập thêm</label>
+              <input
+                type="number"
+                name="added_quantity"
+                value={productDetails.added_quantity}
+                onChange={changeHandler}
+                placeholder="Nhập số lượng cần cộng thêm"
+              />
             </div>
             <div className="form-item">
               <label><Layers size={17} /> Danh mục</label>

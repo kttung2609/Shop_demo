@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../../Context/ShopContext";
 import { toast } from "react-toastify";
 import "./Checkout.css";
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const Checkout = () => {
-  const { cartItems, getTotalCartAmount, clearCart } = useContext(ShopContext);
+  const { cartItems, getTotalCartAmount, clearCart, user } = useContext(ShopContext);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,6 +27,17 @@ const Checkout = () => {
     note: ""
   });
 
+  useEffect(() => {
+    if (!user) return;
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      name: user.name || "",
+      email: user.email || "",
+      phone: user.phone || currentForm.phone || "",
+    }));
+  }, [user]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -34,8 +45,8 @@ const Checkout = () => {
   const handleOrder = async () => {
     if (isLoading) return;
 
-    if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) {
-      toast.warning("❌ Vui lòng điền đầy đủ thông tin bắt buộc (Tên, SĐT, Địa chỉ)");
+    if (!form.address.trim()) {
+      toast.warning("❌ Vui lòng điền địa chỉ nhận hàng");
       return;
     }
 
@@ -47,8 +58,6 @@ const Checkout = () => {
     setIsLoading(true);
 
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      
       const items = cartItems.map(item => {
         let imageSrc = "default.jpg";
         try {
@@ -125,7 +134,7 @@ const Checkout = () => {
                 <div className="input-box">
                   <label>Họ và tên *</label>
                   <div className="input-wrapper">
-                    <input type="text" name="name" placeholder="Nhập họ tên người nhận" onChange={handleChange} />
+                    <input type="text" name="name" placeholder="Họ và tên" value={form.name} readOnly />
                     <User className="input-icon" size={18} />
                   </div>
                 </div>
@@ -134,14 +143,14 @@ const Checkout = () => {
                   <div className="input-box">
                     <label>Số điện thoại *</label>
                     <div className="input-wrapper">
-                      <input type="text" name="phone" placeholder="Số điện thoại" onChange={handleChange} />
+                      <input type="text" name="phone" placeholder="Số điện thoại" value={form.phone} readOnly />
                       <Phone className="input-icon" size={18} />
                     </div>
                   </div>
                   <div className="input-box">
                     <label>Email (Nhận thông báo)</label>
                     <div className="input-wrapper">
-                      <input type="email" name="email" placeholder="Email của bạn" onChange={handleChange} />
+                      <input type="email" name="email" placeholder="Email của bạn" value={form.email} readOnly />
                       <Mail className="input-icon" size={18} />
                     </div>
                   </div>

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Users.css";
+import { toast } from "react-toastify";
 import { 
   UserPlus, 
   Edit3, 
@@ -8,7 +9,6 @@ import {
   Shield, 
   Camera, 
   X, 
-  Check, 
   UserCircle
 } from "lucide-react";
 
@@ -21,10 +21,11 @@ const Users = () => {
     name: "",
     email: "",
     password: "",
-    role: "user"
+    avatar: ""
   });
   const [avatarFile, setAvatarFile] = useState(null);
   const [preview, setPreview] = useState("");
+  const avatarInputRef = useRef(null);
 
   const fetchUsers = async () => {
     try {
@@ -33,6 +34,7 @@ const Users = () => {
       setUsers(data);
     } catch (error) {
       console.error("Lỗi fetch users:", error);
+      toast.error("Không tải được danh sách thành viên");
     }
   };
 
@@ -49,7 +51,12 @@ const Users = () => {
     if (file) {
       setAvatarFile(file);
       setPreview(URL.createObjectURL(file));
+      toast.success("Đã chọn ảnh xem trước");
     }
+  };
+
+  const openAvatarPicker = () => {
+    avatarInputRef.current?.click();
   };
 
   const uploadAvatar = async () => {
@@ -61,37 +68,77 @@ const Users = () => {
       body: formData
     });
     const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.message || "Upload avatar thất bại");
+    }
     return data.filename;
   };
 
   const handleSubmit = async () => {
-    let avatar = form.avatar;
-    if (avatarFile) {
-      avatar = await uploadAvatar();
-    }
+    try {
+      let avatar = form.avatar;
+      if (avatarFile) {
+        avatar = await uploadAvatar();
+      }
 
-    const url = isEdit 
-      ? `http://localhost:4000/api/users/update/${currentId}` 
-      : "http://localhost:4000/api/users/add";
-    
-    const res = await fetch(url, {
-      method: isEdit ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, avatar })
-    });
+      const password = form.password.trim();
+      if (!isEdit && !password) {
+        toast.error("Vui lòng nhập mật khẩu cho tài khoản mới");
+        return;
+      }
 
-    const data = await res.json();
-    if (data.success) {
-      fetchUsers();
-      setShowDialog(false);
-      resetForm();
+      const url = isEdit 
+        ? `http://localhost:4000/api/users/update/${currentId}` 
+        : "http://localhost:4000/api/users/add";
+
+      const payload = {
+        name: form.name,
+        email: form.email,
+        avatar
+      };
+
+      if (password) {
+        payload.password = password;
+      }
+      
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await fetchUsers();
+        setShowDialog(false);
+        resetForm();
+        toast.success(isEdit ? "Đã cập nhật thành viên" : "Đã thêm thành viên");
+      } else {
+        toast.error(data.message || (isEdit ? "Không thể cập nhật thành viên" : "Không thể thêm thành viên"));
+      }
+    } catch (error) {
+      console.error("Lỗi lưu thành viên:", error);
+      toast.error(error.message || "Không thể kết nối tới máy chủ");
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa thành viên này?")) return;
-    await fetch(`http://localhost:4000/api/users/delete/${id}`, { method: "DELETE" });
-    fetchUsers();
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/users/delete/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchUsers();
+        toast.success("Đã xóa thành viên");
+      } else {
+        toast.error(data.message || "Không thể xóa thành viên");
+      }
+    } catch (error) {
+      console.error("Lỗi xóa thành viên:", error);
+      toast.error("Không thể kết nối tới máy chủ");
+    }
   };
 
   const openEdit = (user) => {
@@ -101,15 +148,15 @@ const Users = () => {
       name: user.name,
       email: user.email,
       password: "",
-      role: user.role,
       avatar: user.avatar
     });
     setPreview(`http://localhost:4000/uploads/avatars/${user.avatar}`);
+    setAvatarFile(null);
     setShowDialog(true);
   };
 
   const resetForm = () => {
-    setForm({ name: "", email: "", password: "", role: "user" });
+    setForm({ name: "", email: "", password: "", avatar: "" });
     setAvatarFile(null);
     setPreview("");
   };
@@ -186,10 +233,17 @@ const Users = () => {
                   <div className="preview-circle">
                     {preview ? <img src={preview} alt="preview" /> : <Camera size={40} color="#ccc" />}
                   </div>
-                  <label className="label-upload">
+                  <button type="button" className="label-upload" onClick={openAvatarPicker}>
                     Tải ảnh đại diện
-                    <input type="file" hidden onChange={handleImage} />
-                  </label>
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleImage}
+                  />
+                  {avatarFile && <span className="selected-file-name">{avatarFile.name}</span>}
                </div>
                <div className="form-inputs">
                   <div className="input-field">
@@ -200,18 +254,15 @@ const Users = () => {
                     <label>Địa chỉ Email</label>
                     <input name="email" placeholder="Email" onChange={handleChange} value={form.email} />
                   </div>
-                  {!isEdit && (
-                    <div className="input-field">
-                      <label>Mật khẩu</label>
-                      <input name="password" type="password" placeholder="Mật khẩu" onChange={handleChange} />
-                    </div>
-                  )}
                   <div className="input-field">
-                    <label>Quyền hạn</label>
-                    <select name="role" onChange={handleChange} value={form.role}>
-                      <option value="user">Khách hàng</option>
-                      <option value="admin">Quản trị viên</option>
-                    </select>
+                    <label>{isEdit ? "Mật khẩu mới" : "Mật khẩu"}</label>
+                    <input
+                      name="password"
+                      type="password"
+                      placeholder={isEdit ? "Để trống nếu không đổi mật khẩu" : "Mật khẩu"}
+                      onChange={handleChange}
+                      value={form.password}
+                    />
                   </div>
                </div>
             </div>

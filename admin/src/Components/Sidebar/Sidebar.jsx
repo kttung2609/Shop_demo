@@ -9,8 +9,9 @@ import {
   Tags, 
   Users, 
   ClipboardList,
-  BarChart3,
-  CreditCard
+    BarChart3,
+    CreditCard,
+    Eye
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -55,6 +56,8 @@ const Sidebar = () => {
             <ClipboardList size={22} />
             <p>Quản lý đơn hàng</p>
         </NavLink>
+
+        
     </div>
   );
 };

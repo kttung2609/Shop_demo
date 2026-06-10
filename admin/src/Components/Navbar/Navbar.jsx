@@ -16,15 +16,15 @@ const Navbar = () => {
       const data = await res.json();
       if (data && data.role === "admin") {
         setUser(data);
-        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("admin", JSON.stringify(data));
       } else {
         setUser(null);
-        localStorage.removeItem("user");
+        localStorage.removeItem("admin");
         navigate("/login");
       }
     } catch (err) {
       setUser(null);
-      localStorage.removeItem("user");
+      localStorage.removeItem("admin");
     }
   };
 
@@ -51,7 +51,7 @@ const Navbar = () => {
     } catch (err) {
       console.error("Logout error:", err);
     }
-    localStorage.removeItem("user");
+    localStorage.removeItem("admin");
     setUser(null);
     // Hard reload to clear any cached auth state
     window.location.href = "/login";
@@ -94,8 +94,8 @@ const Navbar = () => {
                     <p className="user-email">{user.email}</p>
                 </div>
                 <hr />
-                <button onClick={() => window.location.href = "/profile"}><UserIcon size={16}/> Hồ sơ</button>
-                <button onClick={() => window.location.href = "/settings"}><Settings size={16}/> Cài đặt</button>
+                <button onClick={() => navigate("/profile") }><UserIcon size={16}/> Hồ sơ</button>
+                <button onClick={() => navigate("/settings") }><Settings size={16}/> Cài đặt</button>
                 <hr />
                 <button className="logout-btn-nav" onClick={logout}><LogOut size={16}/> Đăng xuất</button>
               </div>

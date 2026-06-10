@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Orders.css";
+import { toast } from "react-toastify";
 import { 
   Package, 
   Truck, 
@@ -12,14 +14,24 @@ import {
   X 
 } from "lucide-react";
 
+const STATUS_FILTER_KEY = "admin-orders-status-filter";
+
 const Orders = () => {
   const [orders, setOrders] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("pending");
+  const [statusFilter, setStatusFilter] = useState(() => {
+    return localStorage.getItem(STATUS_FILTER_KEY) || "pending";
+  });
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
-    const res = await fetch("http://localhost:4000/orders");
-    const data = await res.json();
-    setOrders(data);
+    try {
+      const res = await fetch("http://localhost:4000/orders");
+      const data = await res.json();
+      setOrders(data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Không tải được danh sách đơn hàng");
+    }
   };
 
   const updateStatus = async (id, newStatus) => {
@@ -30,29 +42,60 @@ const Orders = () => {
         body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
-      if (data.success) fetchOrders();
+      if (data.success) {
+        toast.success(
+          newStatus === "shipping"
+            ? "Đã xác nhận đơn hàng"
+            : "Đã cập nhật trạng thái đơn hàng"
+        );
+        fetchOrders();
+      } else {
+        toast.error(data.message || "Không thể cập nhật trạng thái đơn hàng");
+      }
     } catch (err) {
       console.log(err);
+      toast.error("Không thể kết nối tới máy chủ");
     }
   };
 
   const handleCancel = async (id) => {
     const reason = prompt("Nhập lý do huỷ đơn:");
-    if (!reason) return;
+    if (!reason || !reason.trim()) {
+      toast.warning("Vui lòng nhập lý do huỷ đơn");
+      return;
+    }
     const res = await fetch(`http://localhost:4000/orders/cancel/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ note: reason })
+      body: JSON.stringify({ note: reason.trim() })
     });
     const data = await res.json();
-    if (data.success) fetchOrders();
+    if (data.success) {
+      toast.success("Đã huỷ đơn hàng");
+      fetchOrders();
+    } else {
+      toast.error(data.message || "Không thể huỷ đơn hàng");
+    }
   };
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [statusFilter]);
 
-  const filteredOrders = orders.filter((order) => order.status === statusFilter);
+  useEffect(() => {
+    localStorage.setItem(STATUS_FILTER_KEY, statusFilter);
+  }, [statusFilter]);
+
+  const filteredOrders = orders
+    .filter((order) => order.status === statusFilter)
+    .sort((leftOrder, rightOrder) => {
+      const leftTime = new Date(leftOrder.created_at || 0).getTime();
+      const rightTime = new Date(rightOrder.created_at || 0).getTime();
+
+      if (rightTime !== leftTime) return rightTime - leftTime;
+
+      return Number(rightOrder.id || 0) - Number(leftOrder.id || 0);
+    });
 
   const getStatusLabel = (status) => {
     switch (status) {
@@ -98,7 +141,6 @@ const Orders = () => {
           <table className="modern-admin-table">
             <thead>
               <tr>
-                <th style={{width: '80px'}}>MÃ ĐƠN</th>
                 <th style={{width: '180px'}}>KHÁCH HÀNG</th>
                 <th>SẢN PHẨM</th>
                 <th style={{width: '120px'}}>TỔNG TIỀN</th>
@@ -110,7 +152,6 @@ const Orders = () => {
               {filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
                   <tr key={order.id}>
-                    <td className="col-id">#{order.id}</td>
                     <td className="col-customer">
                       <div className="customer-info">
                         <strong>{order.name || "Ẩn danh"}</strong>
@@ -135,19 +176,25 @@ const Orders = () => {
                       </span>
                     </td>
                     <td className="col-actions">
+                      <button className="btn-action detail" onClick={() => navigate(`/order-items/${order.id}`)}>
+                        <Eye size={14} /> Chi tiết
+                      </button>
+
                       {order.status === "pending" && (
-                        <button className="btn-action confirm" onClick={() => updateStatus(order.id, "shipping")}>
-                          <Check size={14} /> Xác nhận
-                        </button>
+                        <div className="action-btn-group">
+                          <button className="btn-action confirm" onClick={() => updateStatus(order.id, "shipping")}>
+                            <Check size={14} /> Xác nhận
+                          </button>
+                          <button className="btn-action cancel" onClick={() => handleCancel(order.id)}>
+                            <X size={14} /> Hủy
+                          </button>
+                        </div>
                       )}
 
                       {order.status === "shipping" && (
                         <div className="action-btn-group">
-                          <button className="btn-action success" onClick={() => updateStatus(order.id, "completed")}>
+                          <button className="btn-action success" onClick={() => updateStatus(order.id, "completed") }>
                             <Check size={14} /> Giao xong
-                          </button>
-                          <button className="btn-action cancel" onClick={() => handleCancel(order.id)}>
-                            <X size={14} /> Hủy
                           </button>
                         </div>
                       )}
@@ -162,7 +209,7 @@ const Orders = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="empty-table">Không tìm thấy đơn hàng nào</td>
+                  <td colSpan="5" className="empty-table">Không tìm thấy đơn hàng nào</td>
                 </tr>
               )}
             </tbody>

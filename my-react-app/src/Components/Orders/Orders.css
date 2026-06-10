@@ -182,12 +182,35 @@
   transition: 0.3s;
 }
 
+.btn-view-detail,
+.btn-cancel,
+.btn-review,
+.btn-rebuy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .btn-cancel {
   border-color: #ddd !important;
   color: #777;
 }
 
 .btn-cancel:hover { background: #fdfdfd; color: var(--primary-color); }
+
+.cancel-note {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: #fff1f0;
+  color: #c0392b;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
 
 .btn-view-detail:hover { background: var(--bg-color); }
 

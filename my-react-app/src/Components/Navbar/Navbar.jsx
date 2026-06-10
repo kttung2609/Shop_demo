@@ -82,15 +82,15 @@ export const Navbar = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Bạn cần tìm sản phẩm gì..."
             />
-            <select
+            {/* <select
               className="search-category"
               value={searchCategory}
               onChange={(e) => setSearchCategory(e.target.value)}
-            >
-              {categories.map((cat) => (
+            > */}
+              {/* {categories.map((cat) => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
+              ))} 
+            </select> */}
             <button type='submit' className='search-icon-btn'>
               <Search size={18} />
             </button>

@@ -150,7 +150,7 @@ router.post("/add", upload.array("images", 5), (req, res) => {
 router.put("/update/:id", upload.array("images", 5), (req, res) => {
   const { 
     name, category, brand_id, series_id, weight, max_tension, 
-    balance_point, stiffness, material, new_price, old_price, quantity, description 
+    balance_point, stiffness, material, new_price, old_price, quantity, added_quantity, description 
   } = req.body;
   const id = req.params.id;
 
@@ -170,6 +170,10 @@ router.put("/update/:id", upload.array("images", 5), (req, res) => {
     imagesToSave = req.body.oldImages || "[]";
   }
 
+  const currentQuantity = Number(quantity) || 0;
+  const incomingQuantity = Number(added_quantity) || 0;
+  const updatedQuantity = currentQuantity + incomingQuantity;
+
   const sql = `
     UPDATE products SET 
     name=?, category_id=?, brand_id=?, series_id=?, weight=?, max_tension=?, 
@@ -181,7 +185,7 @@ router.put("/update/:id", upload.array("images", 5), (req, res) => {
   const values = [
     name, Number(category), Number(brand_id) || null, Number(series_id) || null,
     weight, max_tension, balance_point, stiffness, material,
-    new_price, old_price, Number(quantity), Number(quantity),
+    new_price, old_price, updatedQuantity, updatedQuantity,
     description, imagesToSave, id
   ];
 

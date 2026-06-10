@@ -113,7 +113,7 @@ const AddProduct = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <div className="add-product-container">
@@ -166,7 +166,7 @@ const AddProduct = () => {
                 name="max_tension"
                 value={productDetails.max_tension}
                 onChange={changeHandler}
-                placeholder="Ví dụ: 11-12.5kg"
+                placeholder="Ví dụ: 11-12.5kg"  
               />
             </div>
             <div className="form-item">

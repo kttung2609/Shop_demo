@@ -1,6 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const { promisify } = require("util");
+const { verifyUser } = require("./auth");
+
+const query = promisify(db.query).bind(db);
+const beginTransaction = promisify(db.beginTransaction).bind(db);
+const commit = promisify(db.commit).bind(db);
+const rollback = promisify(db.rollback).bind(db);
 
 const modifyDailyStatistics = (statDate, revenueDelta, ordersDelta, productsDelta, callback) => {
   const sql = `
@@ -19,80 +26,122 @@ const modifyDailyStatistics = (statDate, revenueDelta, ordersDelta, productsDelt
 
 
 router.post("/add", (req, res) => {
+  (async () => {
+    const { user_id, items, name, phone, email, address, note, status = "pending" } = req.body;
+    const normalizedPhone = typeof phone === "string" ? phone.trim() : "";
+    const normalizedName = typeof name === "string" ? name.trim() : "";
+    const normalizedAddress = typeof address === "string" ? address.trim() : "";
 
-  const { user_id, items, name, phone, email, address, note, status = 'pending' } = req.body;
+    if (!items || items.length === 0) {
+      return res.json({ success: false, message: "Giỏ hàng trống" });
+    }
 
-  if (!items || items.length === 0) {
-    return res.json({ success: false, message: "Giỏ hàng trống" });
-  }
+    if (!normalizedName || !normalizedAddress) {
+      return res.json({ success: false, message: "Thiếu thông tin khách hàng" });
+    }
 
-  if (!name || !phone || !address) {
-    return res.json({ success: false, message: "Thiếu thông tin khách hàng" });
-  }
+    const normalizedItems = items
+      .map((item) => ({
+        product_id: Number(item.product_id),
+        name: item.name,
+        image: item.image,
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+      }))
+      .filter((item) => item.product_id && item.quantity > 0);
 
-  const total = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+    if (normalizedItems.length === 0) {
+      return res.json({ success: false, message: "Dữ liệu sản phẩm không hợp lệ" });
+    }
 
-  const orderSql = `
-    INSERT INTO orders 
-    (user_id, total, status, name, phone, email, address, note)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+    const productMap = new Map();
+    for (const item of normalizedItems) {
+      productMap.set(item.product_id, (productMap.get(item.product_id) || 0) + item.quantity);
+    }
 
-  db.query(
-    orderSql,
-    [user_id, total, status, name, phone, email, address, note || null],
-    (err, result) => {
+    const productIds = Array.from(productMap.keys());
+    const total = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-      if (err) {
-        console.log("ORDER ERROR:", err);
-        return res.json({ success: false, message: err.message });
+    await beginTransaction();
+
+    try {
+      const products = await query(
+        "SELECT id, quantity, stock FROM products WHERE id IN (?) FOR UPDATE",
+        [productIds]
+      );
+
+      if (products.length !== productIds.length) {
+        throw new Error("Có sản phẩm không tồn tại trong hệ thống");
       }
 
-      const orderId = result.insertId;
+      for (const product of products) {
+        const orderedQuantity = productMap.get(product.id) || 0;
+        const availableQuantity = Number(product.quantity ?? product.stock ?? 0);
 
+        if (availableQuantity < orderedQuantity) {
+          throw new Error(`Sản phẩm ID ${product.id} không đủ hàng`);
+        }
+      }
+
+      const orderResult = await query(
+        `
+          INSERT INTO orders 
+          (user_id, total, status, name, phone, email, address, note)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [user_id, total, status, normalizedName, normalizedPhone || null, email, normalizedAddress, note || null]
+      );
+
+      const orderId = orderResult.insertId;
       const itemSql = `
         INSERT INTO order_items 
         (order_id, product_id, name, image, price, quantity)
         VALUES ?
       `;
-      
-      const values = items.map(item => [
+
+      const values = normalizedItems.map((item) => [
         orderId,
-        item.product_id, 
+        item.product_id,
         item.name,
         item.image,
         item.price,
-        item.quantity
+        item.quantity,
       ]);
-      db.query(itemSql, [values], (err2) => {
 
-        if (err2) {
-          console.log("ITEM ERROR:", err2);
-          return res.json({ success: false, message: err2.message });
+      await query(itemSql, [values]);
+
+      for (const [productId, orderedQuantity] of productMap.entries()) {
+        await query(
+          "UPDATE products SET quantity = quantity - ?, stock = stock - ? WHERE id = ?",
+          [orderedQuantity, orderedQuantity, productId]
+        );
+      }
+
+      await commit();
+
+      const totalProducts = normalizedItems.reduce((sum, item) => sum + item.quantity, 0);
+      const statDate = new Date().toISOString().split("T")[0];
+
+      modifyDailyStatistics(statDate, total, 1, totalProducts, (statErr) => {
+        if (statErr) {
+          console.log("DAILY STAT ERROR:", statErr);
         }
-
-        const totalProducts = items.reduce((sum, item) => sum + item.quantity, 0);
-        const statDate = new Date().toISOString().split("T")[0];
-
-        modifyDailyStatistics(statDate, total, 1, totalProducts, (statErr) => {
-          if (statErr) {
-            console.log("DAILY STAT ERROR:", statErr);
-          }
-
-          res.json({
-            success: true,
-            message: "Đặt hàng thành công",
-            order_id: orderId
-          });
-        });
-
       });
 
+      return res.json({
+        success: true,
+        message: "Đặt hàng thành công",
+        order_id: orderId,
+      });
+    } catch (error) {
+      await rollback();
+      console.log("ORDER CREATE ERROR:", error);
+      return res.json({ success: false, message: error.message || "Đặt hàng thất bại" });
     }
-  );
+  })().catch((error) => {
+    console.log("ORDER ROUTE ERROR:", error);
+    res.json({ success: false, message: "Đặt hàng thất bại" });
+  });
 });
 
 
@@ -172,6 +221,83 @@ router.get("/", (req, res) => {
 
 });
 
+router.get("/user", verifyUser, (req, res) => {
+
+  const sql = `
+    SELECT 
+      o.id,
+      o.user_id,
+      o.total,
+      o.status,
+      o.name,
+      o.phone,
+      o.email,
+      o.address,
+      o.note,
+      o.created_at,
+
+      oi.product_id,
+      oi.name AS product_name,
+      oi.image,
+      oi.price,
+      oi.quantity,
+
+      c.name AS category
+
+    FROM orders o
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    LEFT JOIN products p ON oi.product_id = p.id
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE o.user_id = ?
+    ORDER BY o.id DESC
+  `;
+
+  db.query(sql, [req.user.id], (err, results) => {
+
+    if (err) {
+      console.log(err);
+      return res.json([]);
+    }
+
+    const orders = {};
+
+    results.forEach(row => {
+
+      if (!orders[row.id]) {
+        orders[row.id] = {
+          id: row.id,
+          user_id: row.user_id,
+          total: Number(row.total),
+          status: row.status,
+          name: row.name,
+          phone: row.phone,
+          email: row.email,
+          address: row.address,
+          note: row.note,
+          created_at: row.created_at,
+          items: []
+        };
+      }
+
+      if (row.product_id !== null) {
+        orders[row.id].items.push({
+          product_id: row.product_id,
+          name: row.product_name,
+          image: row.image,
+          price: row.price,
+          quantity: row.quantity,
+          category: row.category
+        });
+      }
+
+    });
+
+    res.json(Object.values(orders));
+
+  });
+
+});
+
 
 router.put("/update/:id", (req, res) => {
 
@@ -203,7 +329,7 @@ router.put("/cancel/:id", (req, res) => {
   const orderId = req.params.id;
 
   db.query(
-    "SELECT total, DATE(created_at) as stat_date FROM orders WHERE id = ?",
+    "SELECT status, total, DATE(created_at) as stat_date FROM orders WHERE id = ?",
     [orderId],
     (err, orderResults) => {
       if (err) {
@@ -213,6 +339,10 @@ router.put("/cancel/:id", (req, res) => {
 
       if (!orderResults.length) {
         return res.json({ success: false, message: "Không tìm thấy đơn hàng" });
+      }
+
+      if ((orderResults[0].status || "").toLowerCase() === "shipping") {
+        return res.json({ success: false, message: "Đơn đang giao không thể huỷ" });
       }
 
       const orderTotal = Number(orderResults[0].total) || 0;

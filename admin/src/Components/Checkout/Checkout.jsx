@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import "./Checkout.css";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { AdminContext } from "../../Context/AdminContext";
 
 const Checkout = () => {
+  const { admin } = useContext(AdminContext);
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,13 @@ const Checkout = () => {
     }
 
     setError("");
-    const user = JSON.parse(localStorage.getItem("user"));
+
+    const currentAdmin = admin || JSON.parse(localStorage.getItem("admin"));
+
+    if (!currentAdmin?.id) {
+      setError("Không xác định được tài khoản quản trị hiện tại");
+      return;
+    }
 
     const items = cartItems.map(item => {
       let imageSrc = "default.jpg";
@@ -88,7 +96,7 @@ const Checkout = () => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        user_id: user?.id,
+        user_id: currentAdmin.id,
         items,
         name: form.name,
         phone: form.phone,

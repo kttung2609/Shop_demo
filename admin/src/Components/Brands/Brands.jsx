@@ -24,6 +24,7 @@ const Brands = () => {
       setBrands(data || []);
     } catch (error) {
       console.error("Lỗi fetch brands:", error);
+      toast.error("Không tải được danh sách thương hiệu");
     }
   };
 
@@ -31,40 +32,70 @@ const Brands = () => {
 
   const handleAdd = async () => {
     if (!name.trim()) return toast.warning("Vui lòng nhập tên thương hiệu");
-    const res = await fetch("http://localhost:4000/api/brands/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setBrands([...(brands || []), data.brand]);
-      setShowDialog(false);
-      setName("");
+
+    try {
+      const res = await fetch("http://localhost:4000/api/brands/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchBrands();
+        setShowDialog(false);
+        setName("");
+        toast.success("Đã thêm thương hiệu");
+      } else {
+        toast.error(data.message || "Không thể thêm thương hiệu");
+      }
+    } catch (error) {
+      console.error("Lỗi thêm thương hiệu:", error);
+      toast.error("Không thể kết nối tới máy chủ");
     }
   };
 
   const handleUpdate = async () => {
-    const res = await fetch(`http://localhost:4000/api/brands/update/${currentId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      const updated = brands.map((b) => b.id === currentId ? { ...b, name } : b);
-      setBrands(updated);
-      setShowDialog(false);
-      setName("");
-      setIsEdit(false);
+    try {
+      const res = await fetch(`http://localhost:4000/api/brands/update/${currentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchBrands();
+        setShowDialog(false);
+        setName("");
+        setIsEdit(false);
+        toast.success("Đã cập nhật thương hiệu");
+      } else {
+        toast.error(data.message || "Không thể cập nhật thương hiệu");
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật thương hiệu:", error);
+      toast.error("Không thể kết nối tới máy chủ");
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xóa thương hiệu này sẽ ảnh hưởng đến sản phẩm liên quan. Bạn chắc chứ?")) return;
-    const res = await fetch(`http://localhost:4000/api/brands/delete/${id}`, { method: "DELETE" });
-    const data = await res.json();
-    if (data.success) setBrands(brands.filter((b) => b.id !== id));
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/brands/delete/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchBrands();
+        toast.success("Đã xóa thương hiệu");
+      } else {
+        toast.error(data.message || "Không thể xóa thương hiệu");
+      }
+    } catch (error) {
+      console.error("Lỗi xóa thương hiệu:", error);
+      toast.error("Không thể kết nối tới máy chủ");
+    }
   };
 
   const openEdit = (b) => {
